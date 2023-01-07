@@ -1,0 +1,3 @@
+[submodule "src/shrimp"]
+	path = src/shrimp
+	url = git@github.com:Vau1ters/shrimp.git
