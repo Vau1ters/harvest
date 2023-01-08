@@ -189,12 +189,8 @@ const makeGroundEntity = (id: number, x: number, y: number): Entity => {
       break
     case 3:
       ground.addComponent(new SpriteComponent(def, 'none'))
+      ground.addComponent(new Collider('Ground', {w: 16, h: 16}))
       ground.addComponent(new SoilComponent())
-
-      {
-        const a = ground.getComponent(SoilComponent.name) as SoilComponent
-        a.state = 'seed'
-      }
   }
   return ground
 }
@@ -227,7 +223,7 @@ export const makeEnemyCoreEntity = (): Entity => {
 export const makeTulipEnemyEntity = (): Entity => {
   const tulipEnemy = makeEnemyCoreEntity()
   tulipEnemy.addComponent(new SpriteComponent(SpriteDef.getDef('tulip'), 'standRight'))
-  tulipEnemy.addComponent(new ChasePlayerComponent(1.2))
+  tulipEnemy.addComponent(new ChasePlayerComponent(0.3))
   tulipEnemy.addComponent(new HorizontalDirection('Right'))
   tulipEnemy.addComponent(new Collider('Movable',  { w: 9, h: 15 }, { x: 4, y: 1 } ))
   tulipEnemy.addComponent(new Enemy('tulip'))
@@ -239,7 +235,7 @@ const makeRedLineEntity = (x: number, y: number): Entity => {
   redline.addComponent(new SpriteComponent(SpriteDef.getDef('redline'), 'default'))
   redline.addComponent(new Transform(x, y))
   redline.addComponent(new CaptureEnemyComponent())
-  redline.addComponent(new Collider('Movable', {w: 16, h: 16}))
+  redline.addComponent(new Collider('Movable', {w: 16, h: 16}, {x: 0, y : 4}))
   return redline
 }
 
@@ -251,3 +247,4 @@ const makeSeenManEntity = (): Entity => {
   seedman.addComponent(new Collider('Movable', {w: 16, h: 16}))
   return seedman
 }
+

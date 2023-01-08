@@ -8,6 +8,7 @@ import { GameScene } from '@game/scenes/gameScene'
 import { assert } from '@shrimp/utils/assertion'
 import { clamp } from '@shrimp/math/math'
 import { isDead } from '@game/component/deadable'
+import { Soil } from '@game/component/soil'
 
 export class Collision extends System {
   private family: Family
@@ -140,6 +141,12 @@ export class Collision extends System {
               const transGround = ground.getComponent(Transform.name) as Transform
               const colliderGround = ground.getComponent(Collider.name) as Collider
               if (!hitCheck(transGround, colliderGround, trans, collider)) {
+                continue
+              }
+
+              // 土はぶつかっても衝突解決しない
+              if (ground.hasComponent(Soil.name)) {
+                collider.collided.add(ground)
                 continue
               }
 

@@ -8,7 +8,10 @@ import { Keyboard } from '@game/system/keyboard'
 import { HorizontalDirection } from '@game/component/horizontalDirection'
 import { Collider } from '@game/component/collider'
 import { Enemy } from '@game/component/enemy'
-import { calcLength } from '@shrimp/math/math'
+import { calcLength, calcLengthSq } from '@shrimp/math/math'
+import { Soil } from '@game/component/soil'
+import { Entity } from '@shrimp/ecs/entity'
+import { assert } from '@shrimp/utils/assertion'
 
 const INVINSIBLE_TIME = 30
 const KNOCKBACK_TIME = 5
@@ -34,7 +37,10 @@ export class Player extends System {
     player.state = 'stand'
 
     const collider = entity.getComponent(Collider.name) as Collider
+    let nearestSoil: Entity | undefined = undefined
+    let nearestSoilLengthSq = 8 * 8
     for (const collided of collider.collided) {
+      // 敵との衝突
       if (collided.hasComponent(Enemy.name) && player.invinsibleTime > INVINSIBLE_TIME) {
         player.hp--
         player.invinsibleTime = 0
@@ -51,6 +57,28 @@ export class Player extends System {
           horizontalDirection.dir = 'Right'
         }
         break
+      }
+
+      // 土との衝突
+      if (collided.hasComponent(Soil.name)) {
+        const soilTrans = collided.getComponent(Transform.name) as Transform
+        const lengthSq = calcLengthSq(soilTrans.x - trans.x, soilTrans.y - trans.y)
+        if (lengthSq < nearestSoilLengthSq) {
+          nearestSoil = collided
+          nearestSoilLengthSq = lengthSq
+        }
+      }
+    }
+    if (nearestSoil) {
+      const soil = nearestSoil.getComponent(Soil.name) as Soil
+      if (Keyboard.keysTrigger.get('1') === 1) {
+        const seedNum = player.seed.get('tulip')
+        assert(seedNum !== undefined, 'seed num undefined')
+        if (soil.state === 'none' && seedNum > 0) {
+          soil.state = 'seed'
+          soil.seed = 'tulip'
+          player.seed.set('tulip', seedNum - 1)
+        }
       }
     }
 
