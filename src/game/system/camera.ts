@@ -24,7 +24,7 @@ export class Camera extends System {
     const camera = this.cameraFamily.getSingleton()
     const playerTrans = player.getComponent(Transform.name) as Transform
     const cameraTrans = camera.getComponent(Transform.name) as Transform
-    cameraTrans.x = playerTrans.x - windowSize.width / 2
-    cameraTrans.y = playerTrans.y - windowSize.height / 2
+    cameraTrans.x = playerTrans.x + 8 - windowSize.width / 2
+    cameraTrans.y = playerTrans.y + 8 - windowSize.height / 2
   }
 }

@@ -24,24 +24,27 @@ import { HorizontalDirection } from '@game/component/horizontalDirection'
 import { ChasePlayer } from '@game/system/chasePlayer'
 import { Enemy } from '@game/component/enemy'
 import { CaptureEnemy as CaptureEnemyComponent} from '@game/component/captureEnemy'
+import { Store } from '@game/component/store'
+import { Purchase } from '@game/system/purchase'
+import { GameOverScene } from '@game/scenes/gameOverScene'
 
 export class GameScene implements Scene {
   private readonly world: World
+  private player: Entity
 
-  public static mapSize: { width: number, height: number }
-
-  public constructor() {
-    GameScene.mapSize = {
+  public static mapSize = {
       width: 1 + 3 + 5 + 2 + 5 + 3 + 1,
       height: 1 + 3 + 5 + 2 + 5 + 3 + 1 + 12 + 4
     }
- 
+
+  public constructor() {
 
     this.world = new World()
     this.world.addSystem(new Keyboard(this.world))
     this.world.addSystem(new ChasePlayer(this.world))
     this.world.addSystem(new CaptureEnemy(this.world))
     this.world.addSystem(new Player(this.world))
+    this.world.addSystem(new Purchase(this.world))
     this.world.addSystem(new Soil(this.world))
     this.world.addSystem(new Collision(this.world))
     this.world.addSystem(new Camera(this.world))
@@ -117,6 +120,14 @@ export class GameScene implements Scene {
       this.world.addEntity(makeRedLineEntity(16 * (8 + x), 16 * 31))
     }
 
+    // 売店
+    SpriteDef.defineSpriteDef('seedman', 1,
+      new Map([
+        ['default', [0]]
+      ]))
+    this.world.addEntity(makeSeenManEntity())
+
+
     // プレイヤー
     SpriteDef.defineSpriteDef('player', 4,
       new Map([
@@ -124,8 +135,11 @@ export class GameScene implements Scene {
       ['runRight', [{idx: 0, time: 100}, {idx: 1, time: 100}]],
       ['standLeft', [2]],
       ['runLeft', [{idx: 2, time: 100}, {idx: 3, time: 100}]],
+      ['knockbackRight', [1]],
+      ['knockbackLeft', [2]],
       ]))
-    this.world.addEntity(makePlayerEntity())
+    this.player = makePlayerEntity()
+    this.world.addEntity(this.player)
 
     // 敵
     SpriteDef.defineSpriteDef('tulip', 4,
@@ -144,8 +158,13 @@ export class GameScene implements Scene {
     this.world.execute()
   }
 
-  public getNextScene() {
-    return this
+  public getNextScene(): Scene {
+    const player = this.player.getComponent(PlayerComponent.name) as PlayerComponent
+    if (player.hp === 0) {
+      return new GameOverScene(this.world.entityIterator)
+    } else {
+      return this
+    }
   }
 }
 
@@ -163,6 +182,7 @@ const makeGroundEntity = (id: number, x: number, y: number): Entity => {
       break
     case 1:
       ground.addComponent(new SpriteComponent(def, 'shelf'))
+      ground.addComponent(new Collider('Ground', {w: 16, h: 16}))
       break
     case 2:
       ground.addComponent(new SpriteComponent(def, 'tile'))
@@ -182,7 +202,7 @@ const makeGroundEntity = (id: number, x: number, y: number): Entity => {
 const makePlayerEntity = (): Entity => {
   const player = new Entity()
   player.addComponent(new SpriteComponent(SpriteDef.getDef('player'), 'standRight'))
-  player.addComponent(new Transform(16, 16))
+  player.addComponent(new Transform(16 * 9, 16 * 34))
   player.addComponent(new PlayerComponent('stand'))
   player.addComponent(new Deadable(false))
   player.addComponent(new Collider('Movable', {w: 10, h: 15}, {x: 3, y: 1}))
@@ -214,11 +234,20 @@ export const makeTulipEnemyEntity = (): Entity => {
   return tulipEnemy
 }
 
-export const makeRedLineEntity = (x: number, y: number): Entity => {
+const makeRedLineEntity = (x: number, y: number): Entity => {
   const redline = new Entity()
   redline.addComponent(new SpriteComponent(SpriteDef.getDef('redline'), 'default'))
   redline.addComponent(new Transform(x, y))
   redline.addComponent(new CaptureEnemyComponent())
   redline.addComponent(new Collider('Movable', {w: 16, h: 16}))
   return redline
+}
+
+const makeSeenManEntity = (): Entity => {
+  const seedman = new Entity()
+  seedman.addComponent(new SpriteComponent(SpriteDef.getDef('seedman'), 'default'))
+  seedman.addComponent(new Transform(7 * 16, 34 * 16))
+  seedman.addComponent(new Store())
+  seedman.addComponent(new Collider('Movable', {w: 16, h: 16}))
+  return seedman
 }
