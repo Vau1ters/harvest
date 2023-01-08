@@ -10,7 +10,7 @@ export class Collider implements Component
   public collided: Set<Entity>
 
   public constructor(
-    public layer: LayerType,
+    public readonly layer: LayerType,
     public size: {
       w: number,
       h: number

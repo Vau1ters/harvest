@@ -8,20 +8,24 @@ import { Keyboard } from '@game/system/keyboard'
 import { HorizontalDirection } from '@game/component/horizontalDirection'
 import { Collider } from '@game/component/collider'
 import { Enemy } from '@game/component/enemy'
+import { Text } from '@game/component/text'
 import { calcLength, calcLengthSq } from '@shrimp/math/math'
 import { Soil } from '@game/component/soil'
 import { Entity } from '@shrimp/ecs/entity'
 import { assert } from '@shrimp/utils/assertion'
+import { UI } from '@game/component/ui'
 
 const INVINSIBLE_TIME = 30
 const KNOCKBACK_TIME = 5
 
 export class Player extends System {
   private family: Family
+  private hudFamily: Family
 
   public constructor(world: World) {
     super(world)
     this.family = new FamilyBuilder(this.world).include([Transform.name, PlayerComponent.name, Sprite.name, HorizontalDirection.name, Collider.name]).build()
+    this.hudFamily = new FamilyBuilder(this.world).include([Transform.name, UI.name, Text.name]).build()
   }
 
   public init(): void {
@@ -117,5 +121,16 @@ export class Player extends System {
     player.invinsibleTime++
 
     sprite.changeAnimation(player.state + horizontalDirection.dir, true)
+
+    for (const hud of this.hudFamily.entityIterator) {
+      const ui = hud.getComponent(UI.name) as UI
+      if (ui.uiType === 'hud') {
+        const text = hud.getComponent(Text.name) as Text
+        const seedNum = player.seed.get('tulip')
+        assert(seedNum !== undefined, 'seed num undefined')
+        text.changeText(`money: $${player.money}, seed num: ${seedNum}, life: ${player.hp}`)
+        break
+      }
+    }
   }
 }

@@ -20,7 +20,7 @@ export class SpriteDef {
 
     textures = new Array<Texture>()
     for (let x = 0; x < num; x++) {
-      const texture = new Texture(base, new Rectangle(x * 16, 0, 16, 16))
+      const texture = new Texture(base, new Rectangle(x * 16, 0, base.width / num, 16))
       textures.push(texture)
     }
     SpriteDef.texturePool.set(name, textures)

@@ -13,5 +13,7 @@ export class Player implements Component
   public knockbackY = 0
   public constructor(
     public state: PlayerState
-  ){ }
+  ) {
+    this.seed.set('tulip', 0)
+  }
 }

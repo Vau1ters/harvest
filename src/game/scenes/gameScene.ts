@@ -27,6 +27,9 @@ import { CaptureEnemy as CaptureEnemyComponent} from '@game/component/captureEne
 import { Store } from '@game/component/store'
 import { Purchase } from '@game/system/purchase'
 import { GameOverScene } from '@game/scenes/gameOverScene'
+import { UI } from '@game/component/ui'
+import { Text } from '@game/component/text'
+import { TextStyle } from 'pixi.js'
 
 export class GameScene implements Scene {
   private readonly world: World
@@ -150,6 +153,14 @@ export class GameScene implements Scene {
       ['runLeft', [{idx: 2, time: 100}, {idx: 3, time: 100}]],
     ]))
 
+    // UI
+    this.world.addEntity(makeHUDEntity())
+    SpriteDef.defineSpriteDef('purchaseMenu', 1,
+      new Map([
+        ['default', [0]]
+      ]))
+    this.world.addEntity(makePurchaseMenuEntity())
+
     // カメラ
     this.world.addEntity(makeCameraEntity())
   }
@@ -248,3 +259,34 @@ const makeSeenManEntity = (): Entity => {
   return seedman
 }
 
+const makeHUDEntity = (): Entity => {
+  const seedCountUI = new Entity()
+  seedCountUI.addComponent(new Transform(0, 0))
+  seedCountUI.addComponent(new UI('hud'))
+
+  const style = new TextStyle({
+    fontFamily: 'Arial',
+    fontSize: 12,
+    fill: ['#FFFFFF'],
+  });
+
+  seedCountUI.addComponent(new Text('', style))
+  return seedCountUI
+}
+
+const makePurchaseMenuEntity = (): Entity => {
+  const purchaseMenu = new Entity()
+  purchaseMenu.addComponent(new Transform(128, 88))
+  purchaseMenu.addComponent(new UI('purchaseMenu'))
+  purchaseMenu.addComponent(new Deadable(false))
+  purchaseMenu.addComponent(new SpriteComponent(SpriteDef.getDef('purchaseMenu'), 'default'))
+
+  const style = new TextStyle({
+    fontFamily: 'Arial',
+    fontSize: 12,
+    fill: ['#FFFFFF'],
+  });
+
+  purchaseMenu.addComponent(new Text('key 1: tulip', style, {x: 4, y: 0}))
+  return purchaseMenu
+}
