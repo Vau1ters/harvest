@@ -17,21 +17,19 @@ export class Player extends System {
   }
 
   public execute(): void {
-    for (const entity of this.family.entityIterator)
-    {
-      const trans = entity.getComponent(Transform.name) as Transform
-      if (Keyboard.keys.get('ArrowRight')) {
-        trans.x += 1
-      }
-      if (Keyboard.keys.get('ArrowLeft')) {
-        trans.x -= 1
-      }
-      if (Keyboard.keys.get('ArrowUp')) {
-        trans.y -= 1
-      }
-      if (Keyboard.keys.get('ArrowDown')) {
-        trans.y += 1
-      }
+    const entity = this.family.getSingleton()
+    const trans = entity.getComponent(Transform.name) as Transform
+    if (Keyboard.keys.get('ArrowRight')) {
+      trans.x += 1
+    }
+    if (Keyboard.keys.get('ArrowLeft')) {
+      trans.x -= 1
+    }
+    if (Keyboard.keys.get('ArrowUp')) {
+      trans.y -= 1
+    }
+    if (Keyboard.keys.get('ArrowDown')) {
+      trans.y += 1
     }
   }
 }
