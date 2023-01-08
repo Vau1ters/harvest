@@ -4,6 +4,7 @@ import { Family, FamilyBuilder } from '@shrimp/ecs/family'
 import { Transform } from '@game/component/transform'
 import { Camera } from '@game/component/camera'
 import { Sprite } from '@game/component/sprite'
+import { isDead } from '@game/component/deadable'
 
 export class Draw extends System {
   private family: Family
@@ -23,8 +24,14 @@ export class Draw extends System {
     const cameraTrans = camera.getComponent(Transform.name) as Transform
     for (const entity of this.family.entityIterator)
     {
-      const trans = entity.getComponent(Transform.name) as Transform
       const sprite = entity.getComponent(Sprite.name) as Sprite
+      if (isDead(entity)) {
+        sprite.sprite.renderable = false
+        continue
+      } else {
+        sprite.sprite.renderable = true
+      }
+      const trans = entity.getComponent(Transform.name) as Transform
       sprite.sprite.x = trans.x - cameraTrans.x
       sprite.sprite.y = trans.y - cameraTrans.y
     }

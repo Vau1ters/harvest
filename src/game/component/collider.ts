@@ -1,6 +1,8 @@
 import { Component } from '@shrimp/ecs/component'
 import { Entity } from '@shrimp/ecs/entity'
 
+export type LayerType = 'Ground' | 'Movable'
+
 export class Collider implements Component
 {
   public currentGridIdx: {x: number, y: number} = {x: -1, y: -1}
@@ -8,6 +10,7 @@ export class Collider implements Component
   public collided: Set<Entity>
 
   public constructor(
+    public layer: LayerType,
     public size: {
       w: number,
       h: number

@@ -5,9 +5,9 @@ import { Family, FamilyBuilder } from '@shrimp/ecs/family'
 import { Transform } from '@game/component/transform'
 import { Collider } from '@game/component/collider'
 import { GameScene } from '@game/scenes/gameScene'
-import { Layer } from '@game/component/layer'
 import { assert } from '@shrimp/utils/assertion'
 import { clamp } from '@shrimp/math/math'
+import { isDead } from '@game/component/deadable'
 
 export class Collision extends System {
   private family: Family
@@ -16,13 +16,12 @@ export class Collision extends System {
   private movableGrid: Array<Array<Set<Entity>>>
 
   private onEntityAdded(entity: Entity) {
-    const layer = entity.getComponent(Layer.name) as Layer
     const trans = entity.getComponent(Transform.name) as Transform
     const collider = entity.getComponent(Collider.name) as Collider
     const x = div16X(trans.x + collider.anchor.x)
     const y = div16Y(trans.y + collider.anchor.y)
 
-    switch(layer.layer)
+    switch(collider.layer)
     {
       case 'Ground':
         this.groundGrid[y][x] = entity
@@ -35,9 +34,9 @@ export class Collision extends System {
 
 
   private onEntityRemoved(entity: Entity) {
-    const layer = entity.getComponent(Layer.name) as Layer
+    const collider = entity.getComponent(Collider.name) as Collider
 
-    switch (layer.layer)
+    switch (collider.layer)
     {
       case 'Ground':
         assert(false, 'ground don\'t remove')
@@ -93,7 +92,7 @@ export class Collision extends System {
       }
     }
 
-    this.family = new FamilyBuilder(this.world).include([Transform.name, Collider.name, Layer.name]).build()
+    this.family = new FamilyBuilder(this.world).include([Transform.name, Collider.name]).build()
     this.family.entityAddedEvent.addObserver(entity => this.onEntityAdded(entity))
     this.family.entityRemovedEvent.addObserver(entity => this.onEntityRemoved(entity))
   }
@@ -110,14 +109,16 @@ export class Collision extends System {
 
     // 衝突判定
     for (const entity of this.family.entityIterator) {
+      if (isDead(entity)) {
+        continue
+      }
       const collider = entity.getComponent(Collider.name) as Collider
       const trans = entity.getComponent(Transform.name) as Transform
-      const layer = entity.getComponent(Layer.name) as Layer
 
       const cellX = div16X(trans.x + collider.anchor.x)
       const cellY = div16Y(trans.y + collider.anchor.y)
 
-      switch(layer.layer) {
+      switch(collider.layer) {
         case 'Ground':
           break
         case 'Movable':
@@ -175,6 +176,10 @@ export class Collision extends System {
             for (let x = -1; x <= 1; x++) {
               const grid = this.movableGrid[clampMapY(cellY + y)][clampMapX(cellX + x)]
               for (const other of grid) {
+                if (isDead(other)) {
+                  continue
+                }
+
                 if (collider.collided.has(other)) {
                   continue
                 }
@@ -185,6 +190,7 @@ export class Collision extends System {
                   continue
                 }
                 collider.collided.add(other)
+                colliderOther.collided.add(entity)
               }
             }
           }

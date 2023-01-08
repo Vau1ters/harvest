@@ -1,7 +1,8 @@
 import { Scene } from '@shrimp/scene'
-import { BaseTexture, Texture, Rectangle, FrameObject } from 'pixi.js'
 import { World } from '@shrimp/ecs/world'
 import { Entity } from '@shrimp/ecs/entity'
+// graphics
+import { SpriteDef } from '@game/graphics/spriteDef'
 // system
 import { Keyboard } from '@game/system/keyboard'
 import { Player } from '@game/system/player'
@@ -9,6 +10,7 @@ import { Draw } from '@game/system/draw'
 import { Collision } from '@game/system/collision'
 import { Camera } from '@game/system/camera'
 import { Soil } from '@game/system/soil'
+import { CaptureEnemy } from '@game/system/captureEnemy'
 // component
 import { Sprite as SpriteComponent } from '@game/component/sprite'
 import { Transform } from '@game/component/transform'
@@ -16,12 +18,12 @@ import { Player as PlayerComponent } from '@game/component/player'
 import { Camera as CameraComponent } from '@game/component/camera'
 import { Deadable } from '@game/component/deadable'
 import { Collider } from '@game/component/collider'
-import { Layer } from '@game/component/layer'
 import { Soil as SoilComponent } from '@game/component/soil'
 import { ChasePlayer as ChasePlayerComponent } from '@game/component/chasePlayer'
-import { assert } from '@shrimp/utils/assertion'
 import { HorizontalDirection } from '@game/component/horizontalDirection'
 import { ChasePlayer } from '@game/system/chasePlayer'
+import { Enemy } from '@game/component/enemy'
+import { CaptureEnemy as CaptureEnemyComponent} from '@game/component/captureEnemy'
 
 export class GameScene implements Scene {
   private readonly world: World
@@ -30,14 +32,15 @@ export class GameScene implements Scene {
 
   public constructor() {
     GameScene.mapSize = {
-      width: 12,
-      height: 12
+      width: 1 + 3 + 5 + 2 + 5 + 3 + 1,
+      height: 1 + 3 + 5 + 2 + 5 + 3 + 1 + 12 + 4
     }
  
 
     this.world = new World()
     this.world.addSystem(new Keyboard(this.world))
     this.world.addSystem(new ChasePlayer(this.world))
+    this.world.addSystem(new CaptureEnemy(this.world))
     this.world.addSystem(new Player(this.world))
     this.world.addSystem(new Soil(this.world))
     this.world.addSystem(new Collision(this.world))
@@ -46,29 +49,56 @@ export class GameScene implements Scene {
 
     // マップ定義
     const map = [
-      [0,0,0,0,0,0,0,0,0,0,0,0],
-      [0,1,1,1,1,1,1,1,1,1,1,0],
-      [0,1,1,1,1,1,1,1,1,1,1,0],
-      [0,1,1,2,2,2,2,2,2,1,1,0],
-      [0,1,1,2,2,2,2,2,2,1,1,0],
-      [0,1,1,2,2,2,2,2,2,1,1,0],
-      [0,1,1,2,2,2,2,2,2,1,1,0],
-      [0,1,1,2,2,2,2,2,2,1,1,0],
-      [0,1,1,2,2,2,2,2,2,1,1,0],
-      [0,1,1,1,1,1,1,1,1,1,1,0],
-      [0,1,1,1,1,1,1,1,1,1,1,0],
-      [0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0],
+      [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0],
+      [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0],
+      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
+      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
+      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
+      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
+      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
+      [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0],
+      [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0],
+      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
+      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
+      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
+      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
+      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
+      [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0],
+      [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0],
+      [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0],
+      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+
+      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+
+      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,1,2,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     ]
 
     // 背景
-    SpriteDef.defineSpriteDef('ground', 6,
+    SpriteDef.defineSpriteDef('ground', 7,
       new Map([
         ['wall', [0]],
-        ['tile', [1]],
-        ['none', [2]],
-        ['seed', [3]],
-        ['bud', [4]],
-        ['flower', [5]]
+        ['shelf', [1]],
+        ['tile', [2]],
+        ['none', [3]],
+        ['seed', [4]],
+        ['bud', [5]],
+        ['flower', [6]]
       ]))
 
     for (let y = 0; y < GameScene.mapSize.height; y++) {
@@ -76,6 +106,15 @@ export class GameScene implements Scene {
         const ground = makeGroundEntity(map[y][x], x, y)
         this.world.addEntity(ground)
       }
+    }
+
+    // 赤線
+    SpriteDef.defineSpriteDef('redline', 1,
+      new Map([
+        ['default', [0]]
+      ]))
+    for (let x = 0; x < 4; x++) {
+      this.world.addEntity(makeRedLineEntity(16 * (8 + x), 16 * 31))
     }
 
     // プレイヤー
@@ -110,79 +149,25 @@ export class GameScene implements Scene {
   }
 }
 
-class SpriteDef {
-  private static texturePool: Map<string, Array<Texture>>
-  private static defs: Map<string, Map<string, Texture[] | FrameObject[]>>
-
-  private static getTextures = (name: string, num: number): Array<Texture> => {
-    if (!SpriteDef.texturePool) {
-      SpriteDef.texturePool = new Map()
-    }
-
-    let textures = SpriteDef.texturePool.get(name)
-    if (textures) {
-      return textures
-    }
-
-    const { default: url } = require(`/res/${name}.png`) // eslint-disable-line  @typescript-eslint/no-var-requires
-    const base = BaseTexture.from(url)
-
-    textures = new Array<Texture>()
-    for (let x = 0; x < num; x++) {
-      const texture = new Texture(base, new Rectangle(x * 16, 0, 16, 16))
-      textures.push(texture)
-    }
-    SpriteDef.texturePool.set(name, textures)
-    return textures
-  }
-
-  private static isNumArray(arr: number[] | {idx: number, time: number}[]): arr is number[] {
-    return arr.length === 0 || typeof arr[0] === 'number'
-  }
-
-  public static defineSpriteDef(name: string, num: number, def: Map<string, number[] | {idx: number, time: number}[]>) {
-    if (!SpriteDef.defs) {
-      SpriteDef.defs = new Map()
-    }
-    const textures = SpriteDef.getTextures(name, num)
-
-    const def2 = new Map<string, Texture[] | FrameObject[]>()
-    for (const [key, value] of def.entries()) {
-      if (SpriteDef.isNumArray(value)) {
-        def2.set(key, value.map ((idx: number): Texture => textures[idx]))
-      } else {
-        def2.set(key, value.map ((id: {idx: number, time: number}): FrameObject => {
-          return { texture: textures[id.idx], time: id.time }
-        }))
-      }
-    }
-    SpriteDef.defs.set(name, def2)
-  }
-
-  public static getDef(name: string): Map<string, Texture[] | FrameObject[]> {
-    const def = SpriteDef.defs.get(name)
-    assert(def, `definition of ${name} is undefined`)
-    return def
-  }
-}
-
 
 const makeGroundEntity = (id: number, x: number, y: number): Entity => {
   const ground = new Entity()
   ground.addComponent(new Transform(x * 16, y * 16))
-  ground.addComponent(new Layer('Ground'))
 
   const def = SpriteDef.getDef('ground')
 
   switch (id) {
     case 0:
       ground.addComponent(new SpriteComponent(def, 'wall'))
-      ground.addComponent(new Collider({w: 16, h: 16}))
+      ground.addComponent(new Collider('Ground', {w: 16, h: 16}))
       break
     case 1:
-      ground.addComponent(new SpriteComponent(def, 'tile'))
+      ground.addComponent(new SpriteComponent(def, 'shelf'))
       break
     case 2:
+      ground.addComponent(new SpriteComponent(def, 'tile'))
+      break
+    case 3:
       ground.addComponent(new SpriteComponent(def, 'none'))
       ground.addComponent(new SoilComponent())
 
@@ -200,8 +185,7 @@ const makePlayerEntity = (): Entity => {
   player.addComponent(new Transform(16, 16))
   player.addComponent(new PlayerComponent('stand'))
   player.addComponent(new Deadable(false))
-  player.addComponent(new Collider({w: 16, h: 16}))
-  player.addComponent(new Layer('Movable'))
+  player.addComponent(new Collider('Movable', {w: 10, h: 15}, {x: 3, y: 1}))
   player.addComponent(new HorizontalDirection('Right'))
   return player
 }
@@ -217,15 +201,24 @@ export const makeEnemyCoreEntity = (): Entity => {
   const enemy = new Entity()
   enemy.addComponent(new Transform(0, 0))
   enemy.addComponent(new Deadable(false))
-  enemy.addComponent(new Collider( {w: 16, h: 16} ))
-  enemy.addComponent(new Layer('Movable'))
   return enemy
 }
 
 export const makeTulipEnemyEntity = (): Entity => {
   const tulipEnemy = makeEnemyCoreEntity()
   tulipEnemy.addComponent(new SpriteComponent(SpriteDef.getDef('tulip'), 'standRight'))
-  tulipEnemy.addComponent(new ChasePlayerComponent(0.5))
+  tulipEnemy.addComponent(new ChasePlayerComponent(1.2))
   tulipEnemy.addComponent(new HorizontalDirection('Right'))
+  tulipEnemy.addComponent(new Collider('Movable',  { w: 9, h: 15 }, { x: 4, y: 1 } ))
+  tulipEnemy.addComponent(new Enemy('tulip'))
   return tulipEnemy
+}
+
+export const makeRedLineEntity = (x: number, y: number): Entity => {
+  const redline = new Entity()
+  redline.addComponent(new SpriteComponent(SpriteDef.getDef('redline'), 'default'))
+  redline.addComponent(new Transform(x, y))
+  redline.addComponent(new CaptureEnemyComponent())
+  redline.addComponent(new Collider('Movable', {w: 16, h: 16}))
+  return redline
 }
