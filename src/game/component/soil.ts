@@ -1,7 +1,7 @@
 import { Component } from '@shrimp/ecs/component'
 
 export type SoilState = 'none' | 'seed' | 'bud' | 'flower'
-export type SeedType = 'tulip'
+export type SeedType = 'tulip' | 'mouse'
 
 export const incrementSoilState = (soil: Soil) => {
   switch (soil.state) {

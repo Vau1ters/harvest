@@ -21,6 +21,9 @@ export class Sprite implements Component
     application.stage.addChild(this._sprite)
   }
 
+  public remomveSprite() {
+    application.stage.removeChild(this._sprite)
+  }
 
   public changeAnimation(animName: string, continuePlay = false) {
     if (animName == this.currentAnim) {

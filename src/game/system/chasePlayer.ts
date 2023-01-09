@@ -36,8 +36,8 @@ export class ChasePlayer extends System {
       const length = calcLength(dirX, dirY)
       const speed = chasePlayer.speed
 
-      // なんとなく近すぎたら動かないようにしてみる
-      if (length > 2) {
+      // 近すぎても遠すぎても追わない
+      if (length > 2 && length < 110) {
         trans.x += dirX * speed / length
         trans.y += dirY * speed / length
 

@@ -1,7 +1,7 @@
 import { Transform } from '@game/component/transform'
 import { Entity } from '@shrimp/ecs/entity'
 import { SeedType } from '@game/component/soil'
-import { makeTulipEnemyEntity } from '@game/scenes/gameScene'
+import { makeEnemyCoreEntity, makeMouseEnemyEntity, makeTulipEnemyEntity } from '@game/scenes/gameScene'
 import { Deadable } from '@game/component/deadable'
 
 export class EnemyPool {
@@ -18,12 +18,16 @@ export class EnemyPool {
     if (EnemyPool.topIdx < EnemyPool.pool.length) {
       enemy = EnemyPool.pool[EnemyPool.topIdx++]
     } else {
-      enemy = makeTulipEnemyEntity()
+      enemy = makeEnemyCoreEntity()
     }
 
     switch (seedType) {
       case 'tulip':
         // tulip用処理
+        enemy = makeTulipEnemyEntity(enemy)
+        break
+      case 'mouse':
+        enemy = makeMouseEnemyEntity(enemy)
         break
     }
 

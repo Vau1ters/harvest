@@ -10,7 +10,7 @@ import { Collider } from '@game/component/collider'
 import { Enemy } from '@game/component/enemy'
 import { Text } from '@game/component/text'
 import { calcLength, calcLengthSq } from '@shrimp/math/math'
-import { Soil } from '@game/component/soil'
+import { SeedType, Soil } from '@game/component/soil'
 import { Entity } from '@shrimp/ecs/entity'
 import { assert } from '@shrimp/utils/assertion'
 import { UI } from '@game/component/ui'
@@ -42,7 +42,7 @@ export class Player extends System {
 
     const collider = entity.getComponent(Collider.name) as Collider
     let nearestSoil: Entity | undefined = undefined
-    let nearestSoilLengthSq = 8 * 8
+    let nearestSoilLengthSq = 12 * 12
     for (const collided of collider.collided) {
       // 敵との衝突
       if (collided.hasComponent(Enemy.name) && player.invinsibleTime > INVINSIBLE_TIME) {
@@ -75,13 +75,20 @@ export class Player extends System {
     }
     if (nearestSoil) {
       const soil = nearestSoil.getComponent(Soil.name) as Soil
+      let seedType: SeedType | undefined = undefined
       if (Keyboard.keysTrigger.get('1') === 1) {
-        const seedNum = player.seed.get('tulip')
+        seedType = 'tulip'
+      } else if (Keyboard.keysTrigger.get('2') === 1) {
+        seedType = 'mouse'
+      }
+
+      if (seedType !== undefined) {
+        const seedNum = player.seed.get(seedType)
         assert(seedNum !== undefined, 'seed num undefined')
         if (soil.state === 'none' && seedNum > 0) {
           soil.state = 'seed'
-          soil.seed = 'tulip'
-          player.seed.set('tulip', seedNum - 1)
+          soil.seed = seedType
+          player.seed.set(seedType, seedNum - 1)
         }
       }
     }
@@ -126,9 +133,11 @@ export class Player extends System {
       const ui = hud.getComponent(UI.name) as UI
       if (ui.uiType === 'hud') {
         const text = hud.getComponent(Text.name) as Text
-        const seedNum = player.seed.get('tulip')
-        assert(seedNum !== undefined, 'seed num undefined')
-        text.changeText(`money: $${player.money}, seed num: ${seedNum}, life: ${player.hp}`)
+        const tulipNum = player.seed.get('tulip')
+        assert(tulipNum !== undefined, 'seed num undefined')
+        const mouseNum = player.seed.get('mouse')
+        assert(mouseNum !== undefined, 'seed num undefined')
+        text.changeText(`money: $${player.money}, small: ${tulipNum}, middle: ${mouseNum}, life: ${player.hp}`)
         break
       }
     }

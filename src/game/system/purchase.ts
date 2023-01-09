@@ -16,6 +16,7 @@ import { Deadable } from '@game/component/deadable'
 
 const priceMap:Map<SeedType, number>  = new Map([
   ['tulip', 5],
+  ['mouse', 15],
 ])
 
 export class Purchase extends System {
@@ -66,9 +67,12 @@ export class Purchase extends System {
     let buySeed: SeedType
     if (Keyboard.keysTrigger.get('1') === 1) {
       buySeed = 'tulip'
+    } else if (Keyboard.keysTrigger.get('2') === 1) {
+      buySeed = 'mouse'
     } else {
       return
     }
+
 
     const price = priceMap.get(buySeed)
     assert(price, 'undefined seed type')
@@ -80,7 +84,6 @@ export class Purchase extends System {
       }
       num++
       player.seed.set(buySeed, num)
-      console.log(num)
     }
   }
 }

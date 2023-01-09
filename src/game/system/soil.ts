@@ -8,7 +8,8 @@ import { assert } from '@shrimp/utils/assertion'
 import { EnemyPool } from '@game/entity/enemyPool'
 
 const enemyGrowingTime: Map<SeedType, Map<SoilState, number>> = new Map([
-  ['tulip', new Map([['seed', 2], ['bud', 2], ['flower', 2]])]
+  ['tulip', new Map([['seed', 2], ['bud', 2], ['flower', 2]])],
+  ['mouse', new Map([['seed', 3], ['bud', 3], ['flower', 3]])],
 ])
 
 export class Soil extends System {
@@ -28,7 +29,7 @@ export class Soil extends System {
       const soil = entity.getComponent(SoilComponent.name) as SoilComponent
 
       if (soil.state === 'none') {
-        sprite.changeAnimation(soil.state)
+        sprite.changeAnimation(soil.state + soil.seed)
         continue
       }
 
@@ -50,7 +51,7 @@ export class Soil extends System {
       }
 
       soil.time += 1 / 60
-      sprite.changeAnimation(soil.state)
+      sprite.changeAnimation(soil.state + soil.seed)
     }
 
   }

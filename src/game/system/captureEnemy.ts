@@ -9,6 +9,7 @@ import { CaptureEnemy as CaptureEnemyComponent} from '@game/component/captureEne
 import { Enemy } from '@game/component/enemy'
 import { Deadable } from '@game/component/deadable'
 import { Player } from '@game/component/player'
+import { assert } from '@shrimp/utils/assertion'
 
 export class CaptureEnemy extends System {
   private family: Family
@@ -40,6 +41,12 @@ export class CaptureEnemy extends System {
         switch (enemy.seedType) {
           case 'tulip':
             player.money += 10
+            break
+          case 'mouse':
+            player.money += 50
+            break
+          default:
+            assert(false, 'money undefined')
             break
         }
 
