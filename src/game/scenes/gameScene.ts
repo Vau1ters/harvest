@@ -1,8 +1,11 @@
 import { Scene } from '@shrimp/scene'
 import { World } from '@shrimp/ecs/world'
 import { Entity } from '@shrimp/ecs/entity'
+import { GameOverScene } from '@game/scenes/gameOverScene'
+import { TextStyle } from 'pixi.js'
 // graphics
 import { SpriteDef } from '@game/graphics/spriteDef'
+import { assert } from '@shrimp/utils/assertion'
 // system
 import { Keyboard } from '@game/system/keyboard'
 import { Player as PlayerSystem } from '@game/system/player'
@@ -14,6 +17,7 @@ import { CaptureEnemy as CaptureEnemySystem } from '@game/system/captureEnemy'
 import { ChasePlayer as ChasePlayerSystem } from '@game/system/chasePlayer'
 import { Purchase } from '@game/system/purchase'
 import { AttackToPlayer as AttackToPlayerSystem } from '@game/system/attackToPlayer'
+import { Mouse } from '@game/system/mouse'
 // component
 import { Sprite } from '@game/component/sprite'
 import { Transform } from '@game/component/transform'
@@ -27,11 +31,10 @@ import { HorizontalDirection } from '@game/component/horizontalDirection'
 import { Enemy } from '@game/component/enemy'
 import { CaptureEnemy}  from '@game/component/captureEnemy'
 import { Store } from '@game/component/store'
-import { GameOverScene } from '@game/scenes/gameOverScene'
 import { UI } from '@game/component/ui'
 import { Text } from '@game/component/text'
-import { TextStyle } from 'pixi.js'
 import { AttackToPlayer } from '@game/component/attackToPlayer'
+import { MouseState } from '@game/component/mouseState'
 
 export class GameScene implements Scene {
   private readonly world: World
@@ -47,6 +50,7 @@ export class GameScene implements Scene {
     this.world = new World()
     this.world.addSystem(new Keyboard(this.world))
     this.world.addSystem(new ChasePlayerSystem(this.world))
+    this.world.addSystem(new Mouse(this.world))
     this.world.addSystem(new AttackToPlayerSystem(this.world))
     this.world.addSystem(new CaptureEnemySystem(this.world))
     this.world.addSystem(new PlayerSystem(this.world))
@@ -272,6 +276,14 @@ export const makeTulipEnemyEntity = (enemyCore: Entity): Entity => {
   }
   enemyCore.addComponent(new Sprite(SpriteDef.getDef('tulip'), 'standRight'))
 
+  if (enemyCore.hasComponent(AttackToPlayer.name)) {
+    enemyCore.removeComponent(AttackToPlayer.name)
+  }
+
+  if (enemyCore.hasComponent(MouseState.name)) {
+    enemyCore.removeComponent(MouseState.name)
+  }
+
   if (enemyCore.hasComponent(ChasePlayer.name)) {
     const chasePlayer = enemyCore.getComponent(ChasePlayer.name) as ChasePlayer
     chasePlayer.speed = 0.3
@@ -310,18 +322,15 @@ export const makeMouseEnemyEntity = (enemyCore: Entity): Entity => {
 
   if (enemyCore.hasComponent(ChasePlayer.name)) {
     enemyCore.removeComponent(ChasePlayer.name)
-    // const chasePlayer = enemyCore.getComponent(ChasePlayer.name) as ChasePlayer
-    // chasePlayer.speed = 0.5
-  } else {
-    // enemyCore.addComponent(new ChasePlayer(0.5))
   }
 
   if (enemyCore.hasComponent(AttackToPlayer.name)) {
-    const attackToPlayer = enemyCore.getComponent(AttackToPlayer.name) as AttackToPlayer
-    attackToPlayer.init()
-  } else {
-    enemyCore.addComponent(new AttackToPlayer())
+    enemyCore.removeComponent(AttackToPlayer.name)
   }
+
+  // seedTypeがmouseでないのでMouseStateは確実に持っていない
+  assert(!enemyCore.hasComponent(MouseState.name), 'non mouse entity has MouseState')
+  enemyCore.addComponent(new MouseState())
 
   if (enemyCore.hasComponent(Collider.name)) {
     const collider = enemyCore.getComponent(Collider.name) as Collider

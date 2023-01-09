@@ -47,10 +47,12 @@ export class AttackToPlayer extends System {
             dir.dir = 'Left'
           }
           // 震える
-          if (Math.floor(count / 4) % 2 === 1) {
-            trans.x += 0.5
-          } else {
-            trans.x -= 0.5
+          if (count !== 0) {
+            if (Math.floor(count / 4) % 2 === 1) {
+              trans.x += 0.5
+            } else {
+              trans.x -= 0.5
+            }
           }
           break
         case 'attack':

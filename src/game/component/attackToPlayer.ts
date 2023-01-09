@@ -5,7 +5,7 @@ type AttackState = 'charge' | 'attack' | 'slide' | 'wait'
 const CHARGE_TIME = 60
 const ATTACK_TIME = 10
 const SLIDE_TIME = 30
-const WAIT_TIME = 120
+const WAIT_TIME = 60
 
 export class AttackToPlayer implements Component
 {
@@ -36,15 +36,17 @@ export class AttackToPlayer implements Component
   public updateState() {
     this.count++
     if (this.stateEnd()) {
-      this.count = 0
       switch(this.state) {
         case 'charge':
+          this.count = 0
           this.state = 'attack'
           break
         case 'attack':
+          this.count = 0
           this.state = 'slide'
           break
         case 'slide':
+          this.count = 0
           this.state = 'wait'
           break
         case 'wait':
