@@ -50,8 +50,7 @@ export class Purchase extends System {
     const playerEntity = this.playerFamily.getSingleton()
     const seedman = this.seedmanFamily.getSingleton()
     const seedmanCollider = seedman.getComponent(Collider.name) as Collider
-    const horizontalDirection = playerEntity.getComponent(HorizontalDirection.name) as HorizontalDirection
-    if (!seedmanCollider.collided.has(playerEntity) || horizontalDirection.dir !== 'Left') {
+    if (!seedmanCollider.collided.has(playerEntity)) {
       if (this.purchaseMenu) {
         const deadable = this.purchaseMenu.getComponent(Deadable.name) as Deadable
         deadable.isDead = true
@@ -65,9 +64,11 @@ export class Purchase extends System {
     const player = playerEntity.getComponent(Player.name) as Player
 
     let buySeed: SeedType
-    if (Keyboard.keysTrigger.get('1') === 1) {
+    const key1 = Keyboard.keysTrigger.get('1')
+    const key2 = Keyboard.keysTrigger.get('2')
+    if (key1 !== undefined && (key1 === 1 || key1 > 30)) {
       buySeed = 'tulip'
-    } else if (Keyboard.keysTrigger.get('2') === 1) {
+    } else if (key2 !== undefined && (key2 === 1 || key2 > 30)) {
       buySeed = 'mouse'
     } else {
       return

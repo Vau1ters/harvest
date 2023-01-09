@@ -2,10 +2,10 @@ import { Component } from '@shrimp/ecs/component'
 
 type AttackState = 'charge' | 'attack' | 'slide' | 'wait'
 
-const CHARGE_TIME = 60
-const ATTACK_TIME = 10
+const CHARGE_TIME = 30
+const ATTACK_TIME = 20
 const SLIDE_TIME = 30
-const WAIT_TIME = 60
+const WAIT_TIME = 30
 
 export class AttackToPlayer implements Component
 {

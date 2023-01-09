@@ -18,6 +18,7 @@ import { ChasePlayer as ChasePlayerSystem } from '@game/system/chasePlayer'
 import { Purchase } from '@game/system/purchase'
 import { AttackToPlayer as AttackToPlayerSystem } from '@game/system/attackToPlayer'
 import { Mouse } from '@game/system/mouse'
+import { Button as ButtonSystem } from '@game/system/button'
 // component
 import { Sprite } from '@game/component/sprite'
 import { Transform } from '@game/component/transform'
@@ -35,6 +36,11 @@ import { UI } from '@game/component/ui'
 import { Text } from '@game/component/text'
 import { AttackToPlayer } from '@game/component/attackToPlayer'
 import { MouseState } from '@game/component/mouseState'
+import { AvoidEnemy } from '@game/system/avoidEnemy'
+import { TulipState } from '@game/component/tulipState'
+import { Tulip } from '@game/system/tulip'
+import { Button } from '@game/component/button'
+import { Cursor } from '@game/component/cursor'
 
 export class GameScene implements Scene {
   private readonly world: World
@@ -49,9 +55,12 @@ export class GameScene implements Scene {
 
     this.world = new World()
     this.world.addSystem(new Keyboard(this.world))
-    this.world.addSystem(new ChasePlayerSystem(this.world))
+    this.world.addSystem(new ButtonSystem(this.world))
     this.world.addSystem(new Mouse(this.world))
+    this.world.addSystem(new Tulip(this.world))
+    this.world.addSystem(new ChasePlayerSystem(this.world))
     this.world.addSystem(new AttackToPlayerSystem(this.world))
+    this.world.addSystem(new AvoidEnemy(this.world))
     this.world.addSystem(new CaptureEnemySystem(this.world))
     this.world.addSystem(new PlayerSystem(this.world))
     this.world.addSystem(new Purchase(this.world))
@@ -62,60 +71,61 @@ export class GameScene implements Scene {
 
     // マップ定義
     const map = [
-      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-      [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0],
-      [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0],
-      [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0],
-      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
-      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
-      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
-      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
-      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
-      [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0],
-      [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0],
-      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
-      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
-      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
-      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
-      [0,2,2,2,3,3,3,3,3,2,2,3,3,3,3,3,2,2,2,0],
-      [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0],
-      [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0],
-      [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0],
-      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+      [0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0],
+      [0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0],
+      [0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0],
+      [0,3,3,3,4,4,4,4,4,3,3,4,4,4,4,4,3,3,3,0],
+      [0,3,3,3,4,4,4,4,4,3,3,4,4,4,4,4,3,3,3,0],
+      [0,3,3,3,4,4,4,4,4,3,3,4,4,4,4,4,3,3,3,0],
+      [0,3,3,3,4,4,4,4,4,0,0,4,4,4,4,4,3,3,3,0],
+      [0,3,3,3,4,4,4,4,4,1,1,4,4,4,4,4,3,3,3,0],
+      [0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0],
+      [0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0],
+      [0,3,3,3,4,4,4,4,4,3,3,4,4,4,4,4,3,3,3,0],
+      [0,3,3,3,4,4,4,4,4,3,3,4,4,4,4,4,3,3,3,0],
+      [0,3,3,3,4,4,4,4,4,3,3,4,4,4,4,4,3,3,3,0],
+      [0,3,3,3,4,4,4,4,4,3,3,4,4,4,4,4,3,3,3,0],
+      [0,3,3,3,4,4,4,4,4,3,3,4,4,4,4,4,3,3,3,0],
+      [0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0],
+      [0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0],
+      [0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0],
+      [0,0,0,0,0,0,3,3,3,3,3,3,3,3,0,0,0,0,0,0],
 
-      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
-      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
-      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
-      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
-      // [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
-      // [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
-      // [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
-      // [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
-      // [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
-      // [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
-      // [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
-      // [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,3,3,3,3,3,3,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0,0,0],
+      // [0,0,0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0,0,0],
+      // [0,0,0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0,0,0],
+      // [0,0,0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0,0,0],
+      // [0,0,0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0,0,0],
+      // [0,0,0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0,0,0],
+      // [0,0,0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0,0,0],
+      // [0,0,0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0,0,0],
+      // [0,0,0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0,0,0],
 
-      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
-      [0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0],
-      [0,0,0,0,0,0,1,2,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,2,3,3,3,3,3,0,0,0,0,0,0,0,0],
       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     ]
 
     // 背景
-    SpriteDef.defineSpriteDef('ground', 10,
+    SpriteDef.defineSpriteDef('ground', 11,
       new Map([
-        ['wall', [0]],
-        ['shelf', [1]],
-        ['tile', [2]],
-        ['nonetulip', [3]],
-        ['seedtulip', [4]],
-        ['budtulip', [5]],
-        ['flowertulip', [6]],
-        ['nonemouse', [3]],
-        ['seedmouse', [7]],
-        ['budmouse', [8]],
-        ['flowermouse', [9]],
+        ['ceil', [0]],
+        ['wall', [1]],
+        ['shelf', [2]],
+        ['tile', [3]],
+        ['nonetulip', [4]],
+        ['seedtulip', [5]],
+        ['budtulip', [6]],
+        ['flowertulip', [7]],
+        ['nonemouse', [4]],
+        ['seedmouse', [8]],
+        ['budmouse', [9]],
+        ['flowermouse', [10]],
       ]))
 
     for (let y = 0; y < GameScene.mapSize.height; y++) {
@@ -134,12 +144,39 @@ export class GameScene implements Scene {
       this.world.addEntity(makeRedLineEntity(16 * (8 + x), 16 * (31 - 8)))
     }
 
+    // カーソル
+    SpriteDef.defineSpriteDef('cursor', 10,
+      new Map([
+        ['default', [
+          {idx: 0, time: 300},
+          {idx: 1, time: 20},
+          {idx: 2, time: 20},
+          {idx: 3, time: 20},
+          {idx: 4, time: 20},
+          {idx: 5, time: 300},
+          {idx: 6, time: 20},
+          {idx: 7, time: 20},
+          {idx: 8, time: 20},
+          {idx: 9, time: 20},
+        ]]
+      ]))
+    this.world.addEntity(makeCursorEntity())
+    
+
+    // ボタン
+    SpriteDef.defineSpriteDef('speaker', 4,
+      new Map([
+        ['default', [0]],
+        ['bell', [{idx: 1, time:50}, {idx: 2, time:50}, {idx: 3, time:50}]],
+        ]))
+    this.world.addEntity(makeButtonEntity())
+
     // 売店
     SpriteDef.defineSpriteDef('seedman', 1,
       new Map([
         ['default', [0]]
       ]))
-    this.world.addEntity(makeSeenManEntity())
+    this.world.addEntity(makeSeedManEntity())
 
 
     // プレイヤー
@@ -156,14 +193,15 @@ export class GameScene implements Scene {
     this.world.addEntity(this.player)
 
     // 敵
-    SpriteDef.defineSpriteDef('tulip', 4,
+    SpriteDef.defineSpriteDef('tulip', 6,
     new Map([
       ['standRight', [0]],
       ['runRight', [{idx: 0, time: 100}, {idx: 1, time: 100}]],
       ['standLeft', [2]],
       ['runLeft', [{idx: 2, time: 100}, {idx: 3, time: 100}]],
+      ['sleep', [{idx: 4, time: 500}, {idx: 5, time: 500}]]
     ]))
-    SpriteDef.defineSpriteDef('mouse', 10,
+    SpriteDef.defineSpriteDef('mouse', 12,
     new Map([
       ['standRight', [0]],
       ['runRight', [{idx: 0, time: 100}, {idx: 1, time: 100}]],
@@ -178,6 +216,7 @@ export class GameScene implements Scene {
       ['attackLeft', [8]],
       ['slideLeft', [9]],
       ['waitLeft', [9]],
+      ['sleep', [{idx: 10, time: 500}, {idx: 11, time: 500}]]
     ]))
 
     // UI
@@ -215,17 +254,21 @@ const makeGroundEntity = (id: number, x: number, y: number): Entity => {
 
   switch (id) {
     case 0:
-      ground.addComponent(new Sprite(def, 'wall'))
+      ground.addComponent(new Sprite(def, 'ceil'))
       ground.addComponent(new Collider('Ground', {w: 16, h: 16}))
       break
     case 1:
-      ground.addComponent(new Sprite(def, 'shelf'))
+      ground.addComponent(new Sprite(def, 'wall'))
       ground.addComponent(new Collider('Ground', {w: 16, h: 16}))
       break
     case 2:
-      ground.addComponent(new Sprite(def, 'tile'))
+      ground.addComponent(new Sprite(def, 'shelf'))
+      ground.addComponent(new Collider('Ground', {w: 16, h: 16}))
       break
     case 3:
+      ground.addComponent(new Sprite(def, 'tile'))
+      break
+    case 4:
       ground.addComponent(new Sprite(def, 'nonetulip'))
       ground.addComponent(new Collider('Ground', {w: 16, h: 16}))
       ground.addComponent(new Soil())
@@ -274,7 +317,11 @@ export const makeTulipEnemyEntity = (enemyCore: Entity): Entity => {
     sprite.remomveSprite()
     enemyCore.removeComponent(Sprite.name)
   }
-  enemyCore.addComponent(new Sprite(SpriteDef.getDef('tulip'), 'standRight'))
+  enemyCore.addComponent(new Sprite(SpriteDef.getDef('tulip'), 'sleep'))
+
+  if (enemyCore.hasComponent(ChasePlayer.name)) {
+    enemyCore.removeComponent(ChasePlayer.name)
+  }
 
   if (enemyCore.hasComponent(AttackToPlayer.name)) {
     enemyCore.removeComponent(AttackToPlayer.name)
@@ -284,12 +331,10 @@ export const makeTulipEnemyEntity = (enemyCore: Entity): Entity => {
     enemyCore.removeComponent(MouseState.name)
   }
 
-  if (enemyCore.hasComponent(ChasePlayer.name)) {
-    const chasePlayer = enemyCore.getComponent(ChasePlayer.name) as ChasePlayer
-    chasePlayer.speed = 0.3
-  } else {
-    enemyCore.addComponent(new ChasePlayer(0.3))
-  }
+  // seedTypeがtulipでないのでTulipStateは確実に持っていない
+  assert(!enemyCore.hasComponent(TulipState.name), 'non mouse entity has TulipState')
+  enemyCore.addComponent(new TulipState())
+
   if (enemyCore.hasComponent(Collider.name)) {
     const collider = enemyCore.getComponent(Collider.name) as Collider
     collider.size.w = 8
@@ -318,7 +363,7 @@ export const makeMouseEnemyEntity = (enemyCore: Entity): Entity => {
     sprite.remomveSprite()
     enemyCore.removeComponent(Sprite.name)
   }
-  enemyCore.addComponent(new Sprite(SpriteDef.getDef('mouse'), 'standRight'))
+  enemyCore.addComponent(new Sprite(SpriteDef.getDef('mouse'), 'sleep'))
 
   if (enemyCore.hasComponent(ChasePlayer.name)) {
     enemyCore.removeComponent(ChasePlayer.name)
@@ -326,6 +371,10 @@ export const makeMouseEnemyEntity = (enemyCore: Entity): Entity => {
 
   if (enemyCore.hasComponent(AttackToPlayer.name)) {
     enemyCore.removeComponent(AttackToPlayer.name)
+  }
+
+  if (enemyCore.hasComponent(TulipState.name)) {
+    enemyCore.removeComponent(TulipState.name)
   }
 
   // seedTypeがmouseでないのでMouseStateは確実に持っていない
@@ -354,7 +403,17 @@ const makeRedLineEntity = (x: number, y: number): Entity => {
   return redline
 }
 
-const makeSeenManEntity = (): Entity => {
+const makeButtonEntity = (): Entity => {
+  const button = new Entity()
+  button.addComponent(new Sprite(SpriteDef.getDef('speaker'), 'default'))
+  button.addComponent(new Transform(152, 8 * 16))
+  button.addComponent(new Button())
+  button.addComponent(new Collider('Movable', {w: 16, h: 4}, {x: 0, y : 21}))
+  return button
+}
+
+
+const makeSeedManEntity = (): Entity => {
   const seedman = new Entity()
   seedman.addComponent(new Sprite(SpriteDef.getDef('seedman'), 'default'))
   seedman.addComponent(new Transform(7 * 16, (34 - 8) * 16))
@@ -378,9 +437,18 @@ const makeHUDEntity = (): Entity => {
   return seedCountUI
 }
 
+const makeCursorEntity = (): Entity => {
+  const cursor = new Entity()
+  cursor.addComponent(new Transform(0, 0))
+  cursor.addComponent(new Cursor())
+  cursor.addComponent(new Deadable(false))
+  cursor.addComponent(new Sprite(SpriteDef.getDef('cursor'), 'default'))
+  return cursor
+}
+
 const makePurchaseMenuEntity = (): Entity => {
   const purchaseMenu = new Entity()
-  purchaseMenu.addComponent(new Transform(128, 88))
+  purchaseMenu.addComponent(new Transform(80, 76))
   purchaseMenu.addComponent(new UI('purchaseMenu'))
   purchaseMenu.addComponent(new Deadable(false))
   purchaseMenu.addComponent(new Sprite(SpriteDef.getDef('purchaseMenu'), 'default'))
@@ -391,6 +459,6 @@ const makePurchaseMenuEntity = (): Entity => {
     fill: ['#FFFFFF'],
   });
 
-  purchaseMenu.addComponent(new Text('1: $5 small , 2: $15 middle', style, {x: 4, y: 0}))
+  purchaseMenu.addComponent(new Text('key 1   $5   small seed\nkey 2 $15 middle seed', style, {x: 4, y: 0}))
   return purchaseMenu
 }

@@ -37,29 +37,19 @@ export class ChasePlayer extends System {
       const speed = chasePlayer.speed
 
       // 近すぎても遠すぎても追わない
-      if (length > 2 && length < 110) {
-        trans.x += dirX * speed / length
-        trans.y += dirY * speed / length
+      trans.x += dirX * speed / length
+      trans.y += dirY * speed / length
 
-        if (entity.hasComponent(Sprite.name)) {
-          const sprite = entity.getComponent(Sprite.name) as Sprite
-          if (entity.hasComponent(HorizontalDirection.name)) {
-            const dir = entity.getComponent(HorizontalDirection.name) as HorizontalDirection
-            if (dirX > 0) {
-              dir.dir = 'Right'
-            } else {
-              dir.dir = 'Left'
-            }
-            sprite.changeAnimation('run' + dir.dir, true)
+      if (entity.hasComponent(Sprite.name)) {
+        const sprite = entity.getComponent(Sprite.name) as Sprite
+        if (entity.hasComponent(HorizontalDirection.name)) {
+          const dir = entity.getComponent(HorizontalDirection.name) as HorizontalDirection
+          if (dirX > 0) {
+            dir.dir = 'Right'
+          } else {
+            dir.dir = 'Left'
           }
-        }
-      } else {
-        if (entity.hasComponent(Sprite.name)) {
-          const sprite = entity.getComponent(Sprite.name) as Sprite
-          if (entity.hasComponent(HorizontalDirection.name)) {
-            const dir = entity.getComponent(HorizontalDirection.name) as HorizontalDirection
-            sprite.changeAnimation('stand' + dir.dir, true)
-          }
+          sprite.changeAnimation('run' + dir.dir, true)
         }
       }
     }

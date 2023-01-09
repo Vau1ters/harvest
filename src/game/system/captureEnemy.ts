@@ -41,7 +41,7 @@ export class CaptureEnemy extends System {
             player.money += 10
             break
           case 'mouse':
-            player.money += 50
+            player.money += 40
             break
           default:
             assert(false, 'money undefined')

@@ -14,18 +14,22 @@ import { SeedType, Soil } from '@game/component/soil'
 import { Entity } from '@shrimp/ecs/entity'
 import { assert } from '@shrimp/utils/assertion'
 import { UI } from '@game/component/ui'
+import { Cursor } from '@game/component/cursor'
+import { Deadable } from '@game/component/deadable'
 
-const INVINSIBLE_TIME = 30
+const INVINSIBLE_TIME = 60
 const KNOCKBACK_TIME = 5
 
 export class Player extends System {
   private family: Family
   private hudFamily: Family
+  private cursorFamily: Family
 
   public constructor(world: World) {
     super(world)
     this.family = new FamilyBuilder(this.world).include([Transform.name, PlayerComponent.name, Sprite.name, HorizontalDirection.name, Collider.name]).build()
     this.hudFamily = new FamilyBuilder(this.world).include([Transform.name, UI.name, Text.name]).build()
+    this.cursorFamily = new FamilyBuilder(this.world).include([Transform.name, Cursor.name]).build()
   }
 
   public init(): void {
@@ -73,12 +77,14 @@ export class Player extends System {
         }
       }
     }
+    const cursorEntity = this.cursorFamily.getSingleton()
+    const cursorDeadable = cursorEntity.getComponent(Deadable.name) as Deadable
     if (nearestSoil) {
       const soil = nearestSoil.getComponent(Soil.name) as Soil
       let seedType: SeedType | undefined = undefined
-      if (Keyboard.keysTrigger.get('1') === 1) {
+      if (Keyboard.keys.get('1')) {
         seedType = 'tulip'
-      } else if (Keyboard.keysTrigger.get('2') === 1) {
+      } else if (Keyboard.keys.get('2')) {
         seedType = 'mouse'
       }
 
@@ -91,6 +97,16 @@ export class Player extends System {
           player.seed.set(seedType, seedNum - 1)
         }
       }
+
+      // カーソル表示
+      cursorDeadable.isDead = false
+      const cursorTrans = cursorEntity.getComponent(Transform.name) as Transform
+      const soilTrans = nearestSoil.getComponent(Transform.name) as Transform
+      cursorTrans.x = soilTrans.x
+      cursorTrans.y = soilTrans.y
+    } else {
+      // カーソル非表示
+      cursorDeadable.isDead = true
     }
 
     if (player.invinsibleTime > KNOCKBACK_TIME) {
@@ -137,7 +153,11 @@ export class Player extends System {
         assert(tulipNum !== undefined, 'seed num undefined')
         const mouseNum = player.seed.get('mouse')
         assert(mouseNum !== undefined, 'seed num undefined')
-        text.changeText(`money: $${player.money}, small: ${tulipNum}, middle: ${mouseNum}, life: ${player.hp}`)
+        if (nearestSoil) {
+        text.changeText(`life ${player.hp}\nmoney $${player.money}\nsmall seed ${tulipNum}\nmiddle seed ${mouseNum}\nkey 1 plant small seed\nkey 2 plant middle seed`)
+        } else {
+        text.changeText(`life ${player.hp}\nmoney $${player.money}\nsmall seed ${tulipNum}\nmiddle seed ${mouseNum}`)
+        }
         break
       }
     }

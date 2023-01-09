@@ -18,9 +18,12 @@ export class SpriteDef {
     const { default: url } = require(`/res/${name}.png`) // eslint-disable-line  @typescript-eslint/no-var-requires
     const base = BaseTexture.from(url)
 
+    const width = base.width / num
+    const height = base.height
+
     textures = new Array<Texture>()
     for (let x = 0; x < num; x++) {
-      const texture = new Texture(base, new Rectangle(x * 16, 0, base.width / num, 16))
+      const texture = new Texture(base, new Rectangle(x * width, 0, width, height))
       textures.push(texture)
     }
     SpriteDef.texturePool.set(name, textures)

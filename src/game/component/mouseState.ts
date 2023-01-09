@@ -2,14 +2,14 @@ import { Component } from '@shrimp/ecs/component'
 import { AttackToPlayer } from '@game/component/attackToPlayer'
 import { ChasePlayer } from '@game/component/chasePlayer'
 
-type mouseState = 'chase' | 'attack'
+type mouseState = 'sleep' | 'chase' | 'attack'
 
 export class MouseState implements Component
 {
   public readonly attackToPlayer: AttackToPlayer
   public readonly chasePlayer: ChasePlayer
 
-  public state: mouseState = 'chase'
+  public state: mouseState = 'sleep'
   public count = 0
   
   public constructor(){
@@ -18,7 +18,7 @@ export class MouseState implements Component
   }
 
   public init() {
-    this.state = 'chase'
+    this.state = 'sleep'
     this.count = 0
   }
 }

@@ -1,4 +1,5 @@
 import { AttackToPlayer } from "@game/component/attackToPlayer"
+import { Button } from "@game/component/button"
 import { ChasePlayer } from "@game/component/chasePlayer"
 import { isDead } from "@game/component/deadable"
 import { MouseState } from "@game/component/mouseState"
@@ -8,10 +9,12 @@ import { World } from "@shrimp/ecs/world"
 
 export class Mouse extends System {
   private family: Family
+  private buttonFamily: Family
 
   public constructor(world: World) {
     super(world)
     this.family = new FamilyBuilder(this.world).include([MouseState.name]).build()
+    this.buttonFamily = new FamilyBuilder(this.world).include([Button.name]).build()
   }
 
   public init(): void {
@@ -24,6 +27,14 @@ export class Mouse extends System {
       }
       const mouseState = entity.getComponent(MouseState.name) as MouseState
       switch (mouseState.state) {
+        case 'sleep':
+          for (const buttonEntity of this.buttonFamily.entityIterator) {
+            const button = buttonEntity.getComponent(Button.name) as Button
+            if (button.pressed) {
+              mouseState.state = 'chase'
+            }
+          }
+          break
         case 'chase':
           if (!entity.hasComponent(ChasePlayer.name)) {
             entity.addComponent(mouseState.chasePlayer)

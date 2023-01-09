@@ -8,6 +8,7 @@ import { Sprite } from '@game/component/sprite'
 import { AttackToPlayer as AttackToPlayerComponent } from '@game/component/attackToPlayer'
 import { HorizontalDirection } from '@game/component/horizontalDirection'
 import { isDead } from '@game/component/deadable'
+import { Keyboard } from './keyboard'
 
 export class AttackToPlayer extends System {
   private family: Family
@@ -32,8 +33,9 @@ export class AttackToPlayer extends System {
       const attackToPlayer = entity.getComponent(AttackToPlayerComponent.name) as AttackToPlayerComponent
       const trans = entity.getComponent(Transform.name) as Transform
       const dir = entity.getComponent(HorizontalDirection.name) as HorizontalDirection
-      const dirX = playerTrans.x - trans.x
-      const dirY = playerTrans.y - trans.y
+      // 移動方向予想付き
+      const dirX = playerTrans.x - trans.x + this.playerMoveDirX() * 16
+      const dirY = playerTrans.y - trans.y + this.playerMoveDirY() * 16
       const length = calcLength(dirX, dirY)
       const count = attackToPlayer.count
       const state = attackToPlayer.state
@@ -84,11 +86,27 @@ export class AttackToPlayer extends System {
         sprite.changeAnimation(state + dir.dir, true)
       }
 
-      // 近すぎたり遠すぎたりしたらchargeに移行しないようにする
-      if (!(count === 0 && state === 'charge') || (length > 2 && length < 110)) {
-        attackToPlayer.updateState()
-      }
-
+      attackToPlayer.updateState()
     }
+  }
+
+  private playerMoveDirX(): number {
+      if (Keyboard.keys.get('ArrowRight')) {
+        return 1
+      } 
+      if (Keyboard.keys.get('ArrowLeft')) {
+        return -1
+      }
+    return 0
+  }
+
+  private playerMoveDirY(): number {
+      if (Keyboard.keys.get('ArrowUp')) {
+        return -1
+      }
+      if (Keyboard.keys.get('ArrowDown')) {
+        return 1
+      }
+    return 0
   }
 }

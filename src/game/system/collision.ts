@@ -186,6 +186,9 @@ export class Collision extends System {
                 if (isDead(other)) {
                   continue
                 }
+                if (other.id === entity.id) {
+                  continue
+                }
 
                 if (collider.collided.has(other)) {
                   continue
