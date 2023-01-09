@@ -10,7 +10,7 @@ export class TulipState implements Component
   public state: tulipState = 'sleep'
   
   public constructor(){
-    this.chasePlayer = new ChasePlayer(0.9)
+    this.chasePlayer = new ChasePlayer(0.5)
   }
 
   public init() {
