@@ -3,18 +3,18 @@ import { Button } from "@game/component/button"
 import { ChasePlayer } from "@game/component/chasePlayer"
 import { isDead } from "@game/component/deadable"
 import { MouseState } from "@game/component/mouseState"
-import { Family, FamilyBuilder } from "@shrimp/ecs/family"
+import { Family } from "@shrimp/ecs/family"
 import { System } from "@shrimp/ecs/system"
 import { World } from "@shrimp/ecs/world"
 
 export class Mouse extends System {
-  private family: Family
-  private buttonFamily: Family
+  private family = new Family([MouseState])
+  private buttonFamily = new Family([Button])
 
   public constructor(world: World) {
     super(world)
-    this.family = new FamilyBuilder(this.world).include([MouseState.name]).build()
-    this.buttonFamily = new FamilyBuilder(this.world).include([Button.name]).build()
+    this.family.init(this.world)
+    this.buttonFamily.init(this.world)
   }
 
   public init(): void {
@@ -25,37 +25,37 @@ export class Mouse extends System {
       if (isDead(entity)) {
         continue
       }
-      const mouseState = entity.getComponent(MouseState.name) as MouseState
+      const mouseState = entity.getComponent(MouseState)
       switch (mouseState.state) {
         case 'sleep':
           for (const buttonEntity of this.buttonFamily.entityIterator) {
-            const button = buttonEntity.getComponent(Button.name) as Button
+            const button = buttonEntity.getComponent(Button)
             if (button.pressed) {
               mouseState.state = 'chase'
             }
           }
           break
         case 'chase':
-          if (!entity.hasComponent(ChasePlayer.name)) {
+          if (!entity.hasComponent(ChasePlayer)) {
             entity.addComponent(mouseState.chasePlayer)
             mouseState.count = 0
           }
           mouseState.count++
           if (mouseState.count > 60) {
             mouseState.state = 'attack'
-            entity.removeComponent(ChasePlayer.name)
+            entity.removeComponent(ChasePlayer)
           }
           break
         case 'attack':
-          if (!entity.hasComponent(AttackToPlayer.name)) {
+          if (!entity.hasComponent(AttackToPlayer)) {
             entity.addComponent(mouseState.attackToPlayer)
             mouseState.attackToPlayer.init()
           }
           {
-            const attackToPlayer = entity.getComponent(AttackToPlayer.name) as AttackToPlayer
+            const attackToPlayer = entity.getComponent(AttackToPlayer)
             if (attackToPlayer.state === 'wait' && attackToPlayer.stateEnd()) {
               mouseState.state = 'chase'
-              entity.removeComponent(AttackToPlayer.name)
+              entity.removeComponent(AttackToPlayer)
             }
           }
           break

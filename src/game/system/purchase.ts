@@ -1,6 +1,6 @@
 import { System } from '@shrimp/ecs/system'
 import { World } from '@shrimp/ecs/world'
-import { Family, FamilyBuilder } from '@shrimp/ecs/family'
+import { Family } from '@shrimp/ecs/family'
 import { Sprite } from '@game/component/sprite'
 import { Player } from '@game/component/player'
 import { HorizontalDirection } from '@game/component/horizontalDirection'
@@ -20,16 +20,16 @@ const priceMap:Map<SeedType, number>  = new Map([
 ])
 
 export class Purchase extends System {
-  private playerFamily: Family
-  private seedmanFamily: Family
-  private purchaseMenuFamily: Family
+  private playerFamily = new Family([Player, Sprite, HorizontalDirection])
+  private seedmanFamily = new Family([Store, Collider])
+  private purchaseMenuFamily = new Family([UI, Transform])
   private purchaseMenu: Entity | undefined = undefined
 
   public constructor(world: World) {
     super(world)
-    this.playerFamily = new FamilyBuilder(this.world).include([Player.name, Sprite.name, HorizontalDirection.name]).build()
-    this.seedmanFamily = new FamilyBuilder(this.world).include([Store.name, Collider.name]).build()
-    this.purchaseMenuFamily = new FamilyBuilder(this.world).include([UI.name, Transform.name]).build()
+    this.playerFamily.init(this.world)
+    this.seedmanFamily.init(this.world)
+    this.purchaseMenuFamily.init(this.world)
  
   }
 
@@ -39,7 +39,7 @@ export class Purchase extends System {
   public execute(): void {
     if (!this.purchaseMenu) {
       for (const purchaseMenu of this.purchaseMenuFamily.entityIterator) {
-        const ui = purchaseMenu.getComponent(UI.name) as UI
+        const ui = purchaseMenu.getComponent(UI)
         if (ui.uiType === 'purchaseMenu') {
           this.purchaseMenu = purchaseMenu
           break
@@ -49,19 +49,19 @@ export class Purchase extends System {
 
     const playerEntity = this.playerFamily.getSingleton()
     const seedman = this.seedmanFamily.getSingleton()
-    const seedmanCollider = seedman.getComponent(Collider.name) as Collider
+    const seedmanCollider = seedman.getComponent(Collider)
     if (!seedmanCollider.collided.has(playerEntity)) {
       if (this.purchaseMenu) {
-        const deadable = this.purchaseMenu.getComponent(Deadable.name) as Deadable
+        const deadable = this.purchaseMenu.getComponent(Deadable)
         deadable.isDead = true
       }
       return
     }
     if (this.purchaseMenu) {
-      const deadable = this.purchaseMenu.getComponent(Deadable.name) as Deadable
+      const deadable = this.purchaseMenu.getComponent(Deadable)
       deadable.isDead = false
     }
-    const player = playerEntity.getComponent(Player.name) as Player
+    const player = playerEntity.getComponent(Player)
 
     let buySeed: SeedType
     const key1 = Keyboard.keysTrigger.get('1')

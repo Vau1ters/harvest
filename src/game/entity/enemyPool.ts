@@ -31,18 +31,18 @@ export class EnemyPool {
         break
     }
 
-    const trans = enemy.getComponent(Transform.name) as Transform
+    const trans = enemy.getComponent(Transform)
     trans.x = x
     trans.y = y
 
-    const deadable = enemy.getComponent(Deadable.name) as Deadable
+    const deadable = enemy.getComponent(Deadable)
     deadable.isDead = false
 
     return enemy
   }
 
   public static removeEnemy(enemy: Entity) {
-    const deadable = enemy.getComponent(Deadable.name) as Deadable
+    const deadable = enemy.getComponent(Deadable)
     deadable.isDead = true
 
     for(let i = 0; i < EnemyPool.topIdx; i++) {

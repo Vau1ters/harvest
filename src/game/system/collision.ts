@@ -1,7 +1,7 @@
 import { System } from '@shrimp/ecs/system'
 import { World } from '@shrimp/ecs/world'
 import { Entity } from '@shrimp/ecs/entity'
-import { Family, FamilyBuilder } from '@shrimp/ecs/family'
+import { Family } from '@shrimp/ecs/family'
 import { Transform } from '@game/component/transform'
 import { Collider } from '@game/component/collider'
 import { GameScene } from '@game/scenes/gameScene'
@@ -11,14 +11,14 @@ import { isDead } from '@game/component/deadable'
 import { Soil } from '@game/component/soil'
 
 export class Collision extends System {
-  private family: Family
+  private family = new Family([Transform, Collider])
 
   private groundGrid: Array<Array<Entity | null>>
   private movableGrid: Array<Array<Set<Entity>>>
 
   private onEntityAdded(entity: Entity) {
-    const trans = entity.getComponent(Transform.name) as Transform
-    const collider = entity.getComponent(Collider.name) as Collider
+    const trans = entity.getComponent(Transform)
+    const collider = entity.getComponent(Collider)
     const x = div16X(trans.x + collider.anchor.x)
     const y = div16Y(trans.y + collider.anchor.y)
 
@@ -35,7 +35,7 @@ export class Collision extends System {
 
 
   private onEntityRemoved(entity: Entity) {
-    const collider = entity.getComponent(Collider.name) as Collider
+    const collider = entity.getComponent(Collider)
 
     switch (collider.layer)
     {
@@ -56,8 +56,8 @@ export class Collision extends System {
   }
 
   private addMovableEntityToGrid(entity: Entity) {
-    const trans = entity.getComponent(Transform.name) as Transform
-    const collider = entity.getComponent(Collider.name) as Collider
+    const trans = entity.getComponent(Transform)
+    const collider = entity.getComponent(Collider)
     const x = div16X(trans.x + collider.anchor.x)
     const y = div16Y(trans.y + collider.anchor.y)
 
@@ -67,7 +67,7 @@ export class Collision extends System {
   }
 
   private removeMovableEntityFromGrid(entity: Entity) {
-    const collider = entity.getComponent(Collider.name) as Collider
+    const collider = entity.getComponent(Collider)
     assert(collider.currentGridIdx.x != -1, 'this entity not belong to layer')
     assert(collider.currentGridIdx.y != -1, 'this entity not belong to layer')
     this.movableGrid[collider.currentGridIdx.y][collider.currentGridIdx.x].delete(entity)
@@ -93,7 +93,7 @@ export class Collision extends System {
       }
     }
 
-    this.family = new FamilyBuilder(this.world).include([Transform.name, Collider.name]).build()
+    this.family.init(this.world)
     this.family.entityAddedEvent.addObserver(entity => this.onEntityAdded(entity))
     this.family.entityRemovedEvent.addObserver(entity => this.onEntityRemoved(entity))
   }
@@ -104,7 +104,7 @@ export class Collision extends System {
   public execute(): void {
     // 初期化
     for (const entity of this.family.entityIterator) {
-      const collider = entity.getComponent(Collider.name) as Collider
+      const collider = entity.getComponent(Collider)
       collider.collided.clear()
     }
 
@@ -113,8 +113,8 @@ export class Collision extends System {
       if (isDead(entity)) {
         continue
       }
-      const collider = entity.getComponent(Collider.name) as Collider
-      const trans = entity.getComponent(Transform.name) as Transform
+      const collider = entity.getComponent(Collider)
+      const trans = entity.getComponent(Transform)
 
       const cellX = div16X(trans.x + collider.anchor.x)
       const cellY = div16Y(trans.y + collider.anchor.y)
@@ -138,14 +138,14 @@ export class Collision extends System {
               if (ground === null) {
                 continue
               }
-              const transGround = ground.getComponent(Transform.name) as Transform
-              const colliderGround = ground.getComponent(Collider.name) as Collider
+              const transGround = ground.getComponent(Transform)
+              const colliderGround = ground.getComponent(Collider)
               if (!hitCheck(transGround, colliderGround, trans, collider)) {
                 continue
               }
 
               // 土はぶつかっても衝突解決しない
-              if (ground.hasComponent(Soil.name)) {
+              if (ground.hasComponent(Soil)) {
                 collider.collided.add(ground)
                 continue
               }
@@ -194,8 +194,8 @@ export class Collision extends System {
                   continue
                 }
 
-                const transOther = other.getComponent(Transform.name) as Transform
-                const colliderOther = other.getComponent(Collider.name) as Collider
+                const transOther = other.getComponent(Transform)
+                const colliderOther = other.getComponent(Collider)
                 if (!hitCheck(transOther, colliderOther, trans, collider)) {
                   continue
                 }

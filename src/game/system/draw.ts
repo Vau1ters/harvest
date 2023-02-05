@@ -1,6 +1,6 @@
 import { System } from '@shrimp/ecs/system'
 import { World } from '@shrimp/ecs/world'
-import { Family, FamilyBuilder } from '@shrimp/ecs/family'
+import { Family } from '@shrimp/ecs/family'
 import { Transform } from '@game/component/transform'
 import { Camera } from '@game/component/camera'
 import { Sprite } from '@game/component/sprite'
@@ -9,15 +9,15 @@ import { Text } from '@game/component/text'
 import { UI } from '@game/component/ui'
 
 export class Draw extends System {
-  private spriteFamily: Family
-  private textFamily: Family
-  private cameraFamily: Family
+  private spriteFamily = new Family([Transform, Sprite])
+  private textFamily = new Family([Transform, Text])
+  private cameraFamily = new Family([Transform, Camera])
 
   public constructor(world: World) {
     super(world)
-    this.spriteFamily = new FamilyBuilder(this.world).include([Transform.name, Sprite.name]).build()
-    this.textFamily = new FamilyBuilder(this.world).include([Transform.name, Text.name]).build()
-    this.cameraFamily = new FamilyBuilder(this.world).include([Transform.name, Camera.name]).build()
+    this.spriteFamily.init(this.world)
+    this.textFamily.init(this.world)
+    this.cameraFamily.init(this.world)
   }
 
   public init(): void {
@@ -25,11 +25,11 @@ export class Draw extends System {
 
   public execute(): void {
     const camera = this.cameraFamily.getSingleton()
-    const cameraTrans = camera.getComponent(Transform.name) as Transform
+    const cameraTrans = camera.getComponent(Transform)
 
     for (const entity of this.spriteFamily.entityIterator)
     {
-      const sprite = entity.getComponent(Sprite.name) as Sprite
+      const sprite = entity.getComponent(Sprite)
       if (isDead(entity)) {
         sprite.sprite.renderable = false
         continue
@@ -37,8 +37,8 @@ export class Draw extends System {
         sprite.sprite.renderable = true
       }
 
-      const trans = entity.getComponent(Transform.name) as Transform
-      if (entity.hasComponent(UI.name)){
+      const trans = entity.getComponent(Transform)
+      if (entity.hasComponent(UI)){
         sprite.sprite.x = trans.x + sprite.anchor.x
         sprite.sprite.y = trans.y + sprite.anchor.y
       } else {
@@ -49,7 +49,7 @@ export class Draw extends System {
 
     for (const entity of this.textFamily.entityIterator)
     {
-      const text = entity.getComponent(Text.name) as Text
+      const text = entity.getComponent(Text)
       if (isDead(entity)) {
         text.text.renderable = false
         continue
@@ -57,8 +57,8 @@ export class Draw extends System {
         text.text.renderable = true
       }
 
-      const trans = entity.getComponent(Transform.name) as Transform
-      if (entity.hasComponent(UI.name)){
+      const trans = entity.getComponent(Transform)
+      if (entity.hasComponent(UI)){
         text.text.x = trans.x + text.anchor.x
         text.text.y = trans.y + text.anchor.y
       } else {

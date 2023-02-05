@@ -1,6 +1,6 @@
 import { System } from '@shrimp/ecs/system'
 import { World } from '@shrimp/ecs/world'
-import { Family, FamilyBuilder } from '@shrimp/ecs/family'
+import { Family } from '@shrimp/ecs/family'
 import { Transform } from '@game/component/transform'
 import { Sprite } from '@game/component/sprite'
 import { Player as PlayerComponent } from '@game/component/player'
@@ -21,15 +21,15 @@ const INVINSIBLE_TIME = 60
 const KNOCKBACK_TIME = 5
 
 export class Player extends System {
-  private family: Family
-  private hudFamily: Family
-  private cursorFamily: Family
+  private family = new Family([Transform, PlayerComponent, Sprite, HorizontalDirection, Collider])
+  private hudFamily = new Family([Transform, UI, Text])
+  private cursorFamily = new Family([Transform, Cursor])
 
   public constructor(world: World) {
     super(world)
-    this.family = new FamilyBuilder(this.world).include([Transform.name, PlayerComponent.name, Sprite.name, HorizontalDirection.name, Collider.name]).build()
-    this.hudFamily = new FamilyBuilder(this.world).include([Transform.name, UI.name, Text.name]).build()
-    this.cursorFamily = new FamilyBuilder(this.world).include([Transform.name, Cursor.name]).build()
+    this.family.init(this.world)
+    this.hudFamily.init(this.world)
+    this.cursorFamily.init(this.world)
   }
 
   public init(): void {
@@ -37,23 +37,23 @@ export class Player extends System {
 
   public execute(): void {
     const entity = this.family.getSingleton()
-    const trans = entity.getComponent(Transform.name) as Transform
-    const sprite = entity.getComponent(Sprite.name) as Sprite
-    const player = entity.getComponent(PlayerComponent.name) as PlayerComponent
-    const horizontalDirection = entity.getComponent(HorizontalDirection.name) as HorizontalDirection
+    const trans = entity.getComponent(Transform)
+    const sprite = entity.getComponent(Sprite)
+    const player = entity.getComponent(PlayerComponent)
+    const horizontalDirection = entity.getComponent(HorizontalDirection)
 
     player.state = 'stand'
 
-    const collider = entity.getComponent(Collider.name) as Collider
+    const collider = entity.getComponent(Collider)
     let nearestSoil: Entity | undefined = undefined
     let nearestSoilLengthSq = 12 * 12
     for (const collided of collider.collided) {
       // 敵との衝突
-      if (collided.hasComponent(Enemy.name) && player.invinsibleTime > INVINSIBLE_TIME) {
+      if (collided.hasComponent(Enemy) && player.invinsibleTime > INVINSIBLE_TIME) {
         player.hp--
         player.invinsibleTime = 0
 
-        const enemyTrans = collided.getComponent(Transform.name) as Transform
+        const enemyTrans = collided.getComponent(Transform)
         player.knockbackX = trans.x - enemyTrans.x
         player.knockbackY = trans.y - enemyTrans.y
         const length = calcLength(player.knockbackX, player.knockbackY)
@@ -68,8 +68,8 @@ export class Player extends System {
       }
 
       // 土との衝突
-      if (collided.hasComponent(Soil.name)) {
-        const soilTrans = collided.getComponent(Transform.name) as Transform
+      if (collided.hasComponent(Soil)) {
+        const soilTrans = collided.getComponent(Transform)
         const lengthSq = calcLengthSq(soilTrans.x - trans.x, soilTrans.y - trans.y)
         if (lengthSq < nearestSoilLengthSq) {
           nearestSoil = collided
@@ -78,9 +78,9 @@ export class Player extends System {
       }
     }
     const cursorEntity = this.cursorFamily.getSingleton()
-    const cursorDeadable = cursorEntity.getComponent(Deadable.name) as Deadable
+    const cursorDeadable = cursorEntity.getComponent(Deadable)
     if (nearestSoil) {
-      const soil = nearestSoil.getComponent(Soil.name) as Soil
+      const soil = nearestSoil.getComponent(Soil)
       let seedType: SeedType | undefined = undefined
       if (Keyboard.keys.get('1')) {
         seedType = 'tulip'
@@ -100,8 +100,8 @@ export class Player extends System {
 
       // カーソル表示
       cursorDeadable.isDead = false
-      const cursorTrans = cursorEntity.getComponent(Transform.name) as Transform
-      const soilTrans = nearestSoil.getComponent(Transform.name) as Transform
+      const cursorTrans = cursorEntity.getComponent(Transform)
+      const soilTrans = nearestSoil.getComponent(Transform)
       cursorTrans.x = soilTrans.x
       cursorTrans.y = soilTrans.y
     } else {
@@ -146,17 +146,17 @@ export class Player extends System {
     sprite.changeAnimation(player.state + horizontalDirection.dir, true)
 
     for (const hud of this.hudFamily.entityIterator) {
-      const ui = hud.getComponent(UI.name) as UI
+      const ui = hud.getComponent(UI)
       if (ui.uiType === 'hud') {
-        const text = hud.getComponent(Text.name) as Text
+        const text = hud.getComponent(Text)
         const tulipNum = player.seed.get('tulip')
         assert(tulipNum !== undefined, 'seed num undefined')
         const mouseNum = player.seed.get('mouse')
         assert(mouseNum !== undefined, 'seed num undefined')
         if (nearestSoil) {
-        text.changeText(`life ${player.hp}\nmoney $${player.money}\nsmall seed ${tulipNum}\nmiddle seed ${mouseNum}\nkey 1 plant small seed\nkey 2 plant middle seed`)
+        text.changeText(`life ${player.hp}\nmoney $${player.money}\nsmall ${tulipNum}\nmiddle ${mouseNum}\nkey 1 plant small\nkey 2 plant middle`)
         } else {
-        text.changeText(`life ${player.hp}\nmoney $${player.money}\nsmall seed ${tulipNum}\nmiddle seed ${mouseNum}`)
+        text.changeText(`life ${player.hp}\nmoney $${player.money}\nsmall ${tulipNum}\nmiddle ${mouseNum}`)
         }
         break
       }

@@ -1,6 +1,6 @@
 import { System } from '@shrimp/ecs/system'
 import { World } from '@shrimp/ecs/world'
-import { Family, FamilyBuilder } from '@shrimp/ecs/family'
+import { Family } from '@shrimp/ecs/family'
 import { Transform } from '@game/component/transform'
 import { Player } from '@game/component/player'
 import { calcLength } from '@shrimp/math/math'
@@ -11,13 +11,13 @@ import { isDead } from '@game/component/deadable'
 import { Keyboard } from './keyboard'
 
 export class AttackToPlayer extends System {
-  private family: Family
-  private playerFamily: Family
+  private playerFamily = new Family([Transform, Player])
+  private family = new Family([Transform, AttackToPlayerComponent])
 
   public constructor(world: World) {
     super(world)
-    this.playerFamily = new FamilyBuilder(this.world).include([Transform.name, Player.name]).build()
-    this.family = new FamilyBuilder(this.world).include([Transform.name, AttackToPlayerComponent.name]).build()
+    this.playerFamily.init(this.world)
+    this.family.init(this.world)
   }
 
   public init(): void {
@@ -25,14 +25,14 @@ export class AttackToPlayer extends System {
 
   public execute(): void {
     const player = this.playerFamily.getSingleton()
-    const playerTrans = player.getComponent(Transform.name) as Transform
+    const playerTrans = player.getComponent(Transform)
     for (const entity of this.family.entityIterator) {
       if (isDead(entity)) {
         continue
       }
-      const attackToPlayer = entity.getComponent(AttackToPlayerComponent.name) as AttackToPlayerComponent
-      const trans = entity.getComponent(Transform.name) as Transform
-      const dir = entity.getComponent(HorizontalDirection.name) as HorizontalDirection
+      const attackToPlayer = entity.getComponent(AttackToPlayerComponent)
+      const trans = entity.getComponent(Transform)
+      const dir = entity.getComponent(HorizontalDirection)
       // 移動方向予想付き
       const dirX = playerTrans.x - trans.x + this.playerMoveDirX() * 16
       const dirY = playerTrans.y - trans.y + this.playerMoveDirY() * 16
@@ -81,8 +81,8 @@ export class AttackToPlayer extends System {
           break
       }
 
-      if (entity.hasComponent(Sprite.name)) {
-        const sprite = entity.getComponent(Sprite.name) as Sprite
+      if (entity.hasComponent(Sprite)) {
+        const sprite = entity.getComponent(Sprite)
         sprite.changeAnimation(state + dir.dir, true)
       }
 

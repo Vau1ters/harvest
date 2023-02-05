@@ -236,7 +236,7 @@ export class GameScene implements Scene {
   }
 
   public getNextScene(): Scene {
-    const player = this.player.getComponent(Player.name) as Player
+    const player = this.player.getComponent(Player)
     if (player.hp === 0) {
       return new GameOverScene(this.world.entityIterator)
     } else {
@@ -303,8 +303,8 @@ export const makeEnemyCoreEntity = (): Entity => {
 }
 
 export const makeTulipEnemyEntity = (enemyCore: Entity): Entity => {
-  if (enemyCore.hasComponent(Enemy.name)) {
-    const enemy = enemyCore.getComponent(Enemy.name) as Enemy
+  if (enemyCore.hasComponent(Enemy)) {
+    const enemy = enemyCore.getComponent(Enemy)
     if (enemy.seedType === 'tulip') {
       return enemyCore
     }
@@ -312,31 +312,31 @@ export const makeTulipEnemyEntity = (enemyCore: Entity): Entity => {
   } else {
     enemyCore.addComponent(new Enemy('tulip'))
   }
-  if (enemyCore.hasComponent(Sprite.name)) {
-    const sprite = enemyCore.getComponent(Sprite.name) as Sprite
+  if (enemyCore.hasComponent(Sprite)) {
+    const sprite = enemyCore.getComponent(Sprite)
     sprite.remomveSprite()
-    enemyCore.removeComponent(Sprite.name)
+    enemyCore.removeComponent(Sprite)
   }
   enemyCore.addComponent(new Sprite(SpriteDef.getDef('tulip'), 'sleep'))
 
-  if (enemyCore.hasComponent(ChasePlayer.name)) {
-    enemyCore.removeComponent(ChasePlayer.name)
+  if (enemyCore.hasComponent(ChasePlayer)) {
+    enemyCore.removeComponent(ChasePlayer)
   }
 
-  if (enemyCore.hasComponent(AttackToPlayer.name)) {
-    enemyCore.removeComponent(AttackToPlayer.name)
+  if (enemyCore.hasComponent(AttackToPlayer)) {
+    enemyCore.removeComponent(AttackToPlayer)
   }
 
-  if (enemyCore.hasComponent(MouseState.name)) {
-    enemyCore.removeComponent(MouseState.name)
+  if (enemyCore.hasComponent(MouseState)) {
+    enemyCore.removeComponent(MouseState)
   }
 
   // seedTypeがtulipでないのでTulipStateは確実に持っていない
-  assert(!enemyCore.hasComponent(TulipState.name), 'non mouse entity has TulipState')
+  assert(!enemyCore.hasComponent(TulipState), 'non mouse entity has TulipState')
   enemyCore.addComponent(new TulipState())
 
-  if (enemyCore.hasComponent(Collider.name)) {
-    const collider = enemyCore.getComponent(Collider.name) as Collider
+  if (enemyCore.hasComponent(Collider)) {
+    const collider = enemyCore.getComponent(Collider)
     collider.size.w = 8
     collider.size.h = 9
     collider.anchor.x = 4
@@ -348,8 +348,8 @@ export const makeTulipEnemyEntity = (enemyCore: Entity): Entity => {
 }
 
 export const makeMouseEnemyEntity = (enemyCore: Entity): Entity => {
-  if (enemyCore.hasComponent(Enemy.name)) {
-    const enemy = enemyCore.getComponent(Enemy.name) as Enemy
+  if (enemyCore.hasComponent(Enemy)) {
+    const enemy = enemyCore.getComponent(Enemy)
     if (enemy.seedType === 'mouse') {
       return enemyCore
     }
@@ -358,31 +358,31 @@ export const makeMouseEnemyEntity = (enemyCore: Entity): Entity => {
     enemyCore.addComponent(new Enemy('mouse'))
   }
 
-  if (enemyCore.hasComponent(Sprite.name)) {
-    const sprite = enemyCore.getComponent(Sprite.name) as Sprite
+  if (enemyCore.hasComponent(Sprite)) {
+    const sprite = enemyCore.getComponent(Sprite)
     sprite.remomveSprite()
-    enemyCore.removeComponent(Sprite.name)
+    enemyCore.removeComponent(Sprite)
   }
   enemyCore.addComponent(new Sprite(SpriteDef.getDef('mouse'), 'sleep'))
 
-  if (enemyCore.hasComponent(ChasePlayer.name)) {
-    enemyCore.removeComponent(ChasePlayer.name)
+  if (enemyCore.hasComponent(ChasePlayer)) {
+    enemyCore.removeComponent(ChasePlayer)
   }
 
-  if (enemyCore.hasComponent(AttackToPlayer.name)) {
-    enemyCore.removeComponent(AttackToPlayer.name)
+  if (enemyCore.hasComponent(AttackToPlayer)) {
+    enemyCore.removeComponent(AttackToPlayer)
   }
 
-  if (enemyCore.hasComponent(TulipState.name)) {
-    enemyCore.removeComponent(TulipState.name)
+  if (enemyCore.hasComponent(TulipState)) {
+    enemyCore.removeComponent(TulipState)
   }
 
   // seedTypeがmouseでないのでMouseStateは確実に持っていない
-  assert(!enemyCore.hasComponent(MouseState.name), 'non mouse entity has MouseState')
+  assert(!enemyCore.hasComponent(MouseState), 'non mouse entity has MouseState')
   enemyCore.addComponent(new MouseState())
 
-  if (enemyCore.hasComponent(Collider.name)) {
-    const collider = enemyCore.getComponent(Collider.name) as Collider
+  if (enemyCore.hasComponent(Collider)) {
+    const collider = enemyCore.getComponent(Collider)
     collider.size.w = 7
     collider.size.h = 9
     collider.anchor.x = 5

@@ -26,8 +26,8 @@ export class GameOverScene implements Scene {
     if (this.gameoverCount === 60) {
       let player: Player | undefined = undefined
       for (const entity of this.world.entityIterator) {
-        if (entity.hasComponent(Player.name)) {
-          player = entity.getComponent(Player.name) as Player
+        if (entity.hasComponent(Player)) {
+          player = entity.getComponent(Player)
         }
       }
       assert(player, 'player not found')

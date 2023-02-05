@@ -11,9 +11,9 @@ export class Deadable implements Component
 }
 
 export const isDead = (entity: Entity): boolean => {
-  if (!entity.hasComponent(Deadable.name)) {
+  if (!entity.hasComponent(Deadable)) {
     return false
   }
-  const deadable = entity.getComponent(Deadable.name) as Deadable
+  const deadable = entity.getComponent(Deadable)
   return deadable.isDead
 }

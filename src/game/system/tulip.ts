@@ -2,18 +2,18 @@ import { Button } from "@game/component/button"
 import { ChasePlayer } from "@game/component/chasePlayer"
 import { isDead } from "@game/component/deadable"
 import { TulipState } from "@game/component/tulipState"
-import { Family, FamilyBuilder } from "@shrimp/ecs/family"
+import { Family } from "@shrimp/ecs/family"
 import { System } from "@shrimp/ecs/system"
 import { World } from "@shrimp/ecs/world"
 
 export class Tulip extends System {
-  private family: Family
-  private buttonFamily: Family
+  private family = new Family([TulipState])
+  private buttonFamily = new Family([Button])
 
   public constructor(world: World) {
     super(world)
-    this.family = new FamilyBuilder(this.world).include([TulipState.name]).build()
-    this.buttonFamily = new FamilyBuilder(this.world).include([Button.name]).build()
+    this.family.init(this.world)
+    this.buttonFamily.init(this.world)
   }
 
   public init(): void {
@@ -24,18 +24,18 @@ export class Tulip extends System {
       if (isDead(entity)) {
         continue
       }
-      const tulipState = entity.getComponent(TulipState.name) as TulipState
+      const tulipState = entity.getComponent(TulipState)
       switch (tulipState.state) {
         case 'sleep':
           for (const buttonEntity of this.buttonFamily.entityIterator) {
-            const button = buttonEntity.getComponent(Button.name) as Button
+            const button = buttonEntity.getComponent(Button)
             if (button.pressed) {
               tulipState.state = 'chase'
             }
           }
           break
         case 'chase':
-          if (!entity.hasComponent(ChasePlayer.name)) {
+          if (!entity.hasComponent(ChasePlayer)) {
             entity.addComponent(tulipState.chasePlayer)
           }
           break

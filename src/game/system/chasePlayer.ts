@@ -1,6 +1,6 @@
 import { System } from '@shrimp/ecs/system'
 import { World } from '@shrimp/ecs/world'
-import { Family, FamilyBuilder } from '@shrimp/ecs/family'
+import { Family } from '@shrimp/ecs/family'
 import { Transform } from '@game/component/transform'
 import { Player } from '@game/component/player'
 import { ChasePlayer as ChasePlayerComponent } from '@game/component/chasePlayer'
@@ -10,13 +10,13 @@ import { HorizontalDirection } from '@game/component/horizontalDirection'
 import { isDead } from '@game/component/deadable'
 
 export class ChasePlayer extends System {
-  private family: Family
-  private playerFamily: Family
+  private family = new Family([Transform, ChasePlayerComponent])
+  private playerFamily = new Family([Transform, Player])
 
   public constructor(world: World) {
     super(world)
-    this.playerFamily = new FamilyBuilder(this.world).include([Transform.name, Player.name]).build()
-    this.family = new FamilyBuilder(this.world).include([Transform.name, ChasePlayerComponent.name]).build()
+    this.playerFamily.init(this.world)
+    this.family.init(this.world)
   }
 
   public init(): void {
@@ -24,13 +24,13 @@ export class ChasePlayer extends System {
 
   public execute(): void {
     const player = this.playerFamily.getSingleton()
-    const playerTrans = player.getComponent(Transform.name) as Transform
+    const playerTrans = player.getComponent(Transform)
     for (const entity of this.family.entityIterator) {
       if (isDead(entity)) {
         continue
       }
-      const trans = entity.getComponent(Transform.name) as Transform
-      const chasePlayer = entity.getComponent(ChasePlayerComponent.name) as ChasePlayerComponent
+      const trans = entity.getComponent(Transform)
+      const chasePlayer = entity.getComponent(ChasePlayerComponent)
       const dirX = playerTrans.x - trans.x
       const dirY = playerTrans.y - trans.y
       const length = calcLength(dirX, dirY)
@@ -40,10 +40,10 @@ export class ChasePlayer extends System {
       trans.x += dirX * speed / length
       trans.y += dirY * speed / length
 
-      if (entity.hasComponent(Sprite.name)) {
-        const sprite = entity.getComponent(Sprite.name) as Sprite
-        if (entity.hasComponent(HorizontalDirection.name)) {
-          const dir = entity.getComponent(HorizontalDirection.name) as HorizontalDirection
+      if (entity.hasComponent(Sprite)) {
+        const sprite = entity.getComponent(Sprite)
+        if (entity.hasComponent(HorizontalDirection)) {
+          const dir = entity.getComponent(HorizontalDirection)
           if (dirX > 0) {
             dir.dir = 'Right'
           } else {
